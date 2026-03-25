@@ -2,201 +2,188 @@
 <html lang="sv">
 <head>
     <meta charset="UTF-8">
-    <title>Super Car Traffic Dodge 3.0 - FULL VERSION</title>
+    <title>Super Car Traffic Dodge 4.0 - LOCAL ASSETS</title>
     <style>
-        :root { --road-color: #333; --line-color: #fff; --grass: #2d5a27; }
+        :root { --road: #333; --grass: #2d5a27; --line: #fff; --neon: #0ff; }
         body { margin: 0; background: #1a1a1a; display: flex; justify-content: center; align-items: center; height: 100vh; color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
         
-        #game-container { position: relative; width: 400px; height: 700px; background: var(--road-color); border-left: 15px solid var(--grass); border-right: 15px solid var(--grass); overflow: hidden; display: none; transition: 1s; }
-        .lane-line { position: absolute; left: 50%; width: 6px; height: 80px; background: var(--line-color); transform: translateX(-50%); animation: moveRoad 0.6s linear infinite; }
+        #game-container { position: relative; width: 400px; height: 750px; background: var(--road); border-left: 20px solid var(--grass); border-right: 20px solid var(--grass); overflow: hidden; display: none; transition: 1s; box-shadow: 0 0 50px rgba(0,0,0,0.5); }
+        .lane-line { position: absolute; left: 50%; width: 6px; height: 80px; background: var(--line); transform: translateX(-50%); animation: moveRoad 0.6s linear infinite; }
         
         /* Ban-teman */
-        .desert { --grass: #edc9af !important; --road-color: #d2b48c !important; }
-        .neon { --grass: #000 !important; --road-color: #1a1a2e !important; --line-color: #0ff !important; box-shadow: 0 0 30px #0ff; }
+        .desert { --grass: #edc9af !important; --road: #d2b48c !important; }
+        .neon { --grass: #000 !important; --road: #1a1a2e !important; --line: var(--neon) !important; box-shadow: 0 0 40px var(--neon); }
 
-        @keyframes moveRoad { 0% { top: -100px; } 100% { top: 700px; } }
+        @keyframes moveRoad { 0% { top: -100px; } 100% { top: 750px; } }
 
-        #player { position: absolute; bottom: 30px; width: 60px; z-index: 10; transition: left 0.1s ease-out, transform 0.2s; }
-        .enemy { position: absolute; width: 60px; z-index: 5; }
-        .oil { position: absolute; width: 70px; height: 45px; background: rgba(0,0,0,0.7); border-radius: 50%; z-index: 2; filter: blur(3px); }
+        /* Bilar som SVG (Laddas lokalt i koden) */
+        .car-sprite { position: absolute; width: 50px; height: 90px; z-index: 10; transition: left 0.15s ease-out, transform 0.2s; background-size: contain; background-repeat: no-repeat; }
+        .oil { position: absolute; width: 70px; height: 40px; background: rgba(0,0,0,0.8); border-radius: 50%; z-index: 5; filter: blur(3px); }
+        .nitro-fx { filter: drop-shadow(0 15px 10px #f00) brightness(1.3) !important; }
 
-        .overlay { position: absolute; width: 400px; height: 700px; background: rgba(0,0,0,0.9); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; text-align: center; }
-        .btn { padding: 12px 30px; font-size: 18px; background: #e74c3c; color: white; border: none; cursor: pointer; border-radius: 5px; margin-top: 10px; width: 250px; }
-        .btn.owned { background: #27ae60; }
+        .overlay { position: absolute; width: 400px; height: 750px; background: rgba(0,0,0,0.92); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; text-align: center; }
+        .btn { padding: 15px; width: 260px; margin: 8px; cursor: pointer; background: #e74c3c; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; transition: 0.2s; }
+        .btn:hover { transform: scale(1.05); background: #c0392b; }
+        .owned { background: #27ae60 !important; }
         
-        #stats { position: absolute; top: 10px; left: 10px; z-index: 50; font-size: 18px; background: rgba(0,0,0,0.7); padding: 10px; border-radius: 5px; border: 1px solid #444; }
-        #garage { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; max-height: 400px; overflow-y: auto; padding: 10px; }
-        .shop-item { background: #2c3e50; padding: 15px; border-radius: 10px; width: 280px; }
-        .shop-img { height: 70px; object-fit: contain; }
+        #stats { position: absolute; top: 20px; left: 20px; z-index: 50; background: rgba(0,0,0,0.8); padding: 15px; border-radius: 10px; border: 2px solid #444; min-width: 100px; }
+        #nitro-gui { width: 100%; height: 8px; background: #222; margin-top: 8px; border-radius: 4px; overflow: hidden; }
+        #nitro-fill { width: 0%; height: 100%; background: #3498db; transition: 0.1s; }
     </style>
 </head>
 <body>
 
+    <!-- MENY -->
     <div id="start-menu" class="overlay">
-        <h1>GARAGE & BUTIK</h1>
-        <div id="money-display" style="font-size:24px; color:#f1c40f;">Cash: <span id="cash">0</span> kr</div>
+        <h1 style="letter-spacing: 2px; color: #e74c3c;">SUPER CAR DODGE</h1>
+        <div style="font-size:24px; color:#f1c40f; margin-bottom: 20px;">💰 <span id="cash-display">0</span> kr</div>
         
-        <div id="garage">
-            <div class="shop-item">
-                <img src="https://toppng.com" class="shop-img"><br>
-                <button class="btn" id="btn-0" onclick="selectCar(0, 0)">Välj Blå (Gratis)</button>
-            </div>
-            <div class="shop-item">
-                <img src="https://gstatic.com" class="shop-img"><br>
-                <button class="btn" id="btn-1" onclick="selectCar(1, 500)">Köp Grå (500 kr)</button>
-            </div>
-            <div class="shop-item">
-                <img src="https://freeiconspng.com" class="shop-img"><br>
-                <button class="btn" id="btn-2" onclick="selectCar(2, 1200)">Köp Grön (1200 kr)</button>
-            </div>
+        <div id="garage" style="background: #2c3e50; padding: 20px; border-radius: 15px;">
+            <button class="btn owned" id="b0" onclick="selectCar(0,0)">BLÅ SPORT (ÄGD)</button>
+            <button class="btn" id="b1" onclick="selectCar(1,750)">RÖD RACER (750 kr)</button>
+            <button class="btn" id="b2" onclick="selectCar(2,2000)">GUL SUPERCAR (2000 kr)</button>
         </div>
-        <p style="color:#ccc;">SPACE = NITRO (2x Poäng) | Pilar = Styra</p>
+        <p style="margin-top:20px; color:#aaa;">Pilar: Sväng | Space: NITRO (2x Cash)</p>
     </div>
 
-    <div id="game-over" class="overlay" style="display: none;">
-        <h1 style="color: #e74c3c;">CRASH!</h1>
+    <!-- GAME OVER -->
+    <div id="game-over" class="overlay" style="display:none;">
+        <h1 style="color:#e74c3c; font-size: 40px;">CRASHED!</h1>
         <p id="final-score" style="font-size: 24px;">Poäng: 0</p>
-        <button class="btn" onclick="startGame()">SPELA IGEN</button>
-        <button class="btn" style="background: #555;" onclick="showMenu()">GARAGE</button>
+        <button class="btn" onclick="startGame()">KÖR IGEN</button>
+        <button class="btn" style="background:#555" onclick="showMenu()">TILL GARAGET</button>
     </div>
 
+    <!-- HUD -->
     <div id="stats">
-        Poäng: <span id="current-score">0</span><br>
-        Cash: <span id="current-cash-ui">0</span> kr
+        🏁 <span id="ui-score">0</span><br>
+        💵 <span id="ui-cash">0</span> kr
+        <div id="nitro-gui"><div id="nitro-fill"></div></div>
     </div>
 
     <div id="game-container">
-        <div class="lane-line" style="top: 0px;"></div>
-        <div class="lane-line" style="top: 250px;"></div>
-        <div class="lane-line" style="top: 500px;"></div>
-        <img id="player" src="" alt="Player">
+        <div id="road-fx">
+            <div class="lane-line" style="top:0"></div>
+            <div class="lane-line" style="top:250px"></div>
+            <div class="lane-line" style="top:500px"></div>
+        </div>
+        <div id="player" class="car-sprite"></div>
     </div>
 
     <script>
-        const carModels = [
-            "https://toppng.com",
-            "https://gstatic.com",
-            "https://freeiconspng.com"
-        ];
+        // Lokala SVG-modeller (Base64) för att garantera att de syns
+        const carAssets =;
 
         let cash = parseInt(localStorage.getItem('carCash')) || 0;
-        let unlockedCars = JSON.parse(localStorage.getItem('unlocked')) || [true, false, false];
-        let currentCarIdx = 0;
-        let gameActive = false;
+        let unlocked = JSON.parse(localStorage.getItem('unlocked')) || [true, false, false];
+        let currentCar = 0;
         let score = 0;
-        let playerX = 170;
-        let isNitro = false;
+        let playerX = 175;
+        let gameActive = false;
+        let nitroActive = false;
         let isSkidding = false;
-        let mainInterval;
-
-        updateUI();
+        let spawnTimer;
 
         function updateUI() {
-            document.getElementById('cash').innerText = cash;
-            document.getElementById('current-cash-ui').innerText = cash;
-            localStorage.setItem('carCash', cash);
-            localStorage.setItem('unlocked', JSON.stringify(unlockedCars));
-            unlockedCars.forEach((unlocked, i) => {
-                const btn = document.getElementById(`btn-${i}`);
-                if(unlocked) { btn.innerText = "VÄLJ BIL"; btn.classList.add('owned'); }
+            document.getElementById('cash-display').innerText = cash;
+            document.getElementById('ui-cash').innerText = cash;
+            unlocked.forEach((u, i) => { 
+                const b = document.getElementById('b'+i);
+                if(u) { b.classList.add('owned'); b.innerText = i==0?"BLÅ SPORT (VÄLD)":i==1?"RÖD RACER (VÄLD)":"GUL SUPERCAR (VÄLD)"; }
             });
+            localStorage.setItem('carCash', cash);
+            localStorage.setItem('unlocked', JSON.stringify(unlocked));
         }
 
         function selectCar(idx, price) {
-            if (!unlockedCars[idx]) {
-                if (cash >= price) { cash -= price; unlockedCars[idx] = true; updateUI(); }
-                else { alert("Du behöver mer cash!"); return; }
+            if(!unlocked[idx]) {
+                if(cash >= price) { cash -= price; unlocked[idx] = true; updateUI(); }
+                else { alert("Kör mer för att tjäna pengar!"); return; }
             }
-            currentCarIdx = idx; startGame();
+            currentCar = idx; startGame();
         }
 
         function startGame() {
-            gameActive = true; score = 0; playerX = 170;
-            document.getElementById('player').src = carModels[currentCarIdx];
+            gameActive = true; score = 0; playerX = 175;
             document.getElementById('start-menu').style.display = 'none';
             document.getElementById('game-over').style.display = 'none';
             document.getElementById('game-container').style.display = 'block';
-            document.getElementById('game-container').className = ''; 
+            document.getElementById('game-container').className = '';
+            
+            const p = document.getElementById('player');
+            p.style.backgroundImage = carAssets[currentCar];
+            p.style.left = playerX + 'px';
+            p.style.transform = 'rotate(0deg)';
             
             document.querySelectorAll('.enemy, .oil').forEach(e => e.remove());
-            if(mainInterval) clearInterval(mainInterval);
-            mainInterval = setInterval(gameLoop, 1000);
+            if(spawnTimer) clearInterval(spawnTimer);
+            spawnTimer = setInterval(spawnLogic, 1000);
         }
 
-        function gameLoop() {
+        function spawnLogic() {
             if(!gameActive) return;
             createEnemy();
             if(Math.random() > 0.7) createOil();
         }
 
-        function createOil() {
-            const oil = document.createElement('div');
-            oil.className = 'oil';
-            oil.style.left = Math.random() * 300 + 20 + 'px';
-            oil.style.top = '-100px';
-            document.getElementById('game-container').appendChild(oil);
-            moveElement(oil, 6, false);
-        }
-
         function createEnemy() {
-            const enemy = document.createElement('img');
-            enemy.className = 'enemy';
-            enemy.src = carModels[Math.floor(Math.random() * carModels.length)];
-            enemy.style.left = Math.floor(Math.random() * 300) + 20 + 'px';
-            enemy.style.top = '-150px';
-            enemy.style.transform = 'rotate(180deg)';
-            document.getElementById('game-container').appendChild(enemy);
-            moveElement(enemy, 7 + (score/20), true);
+            const e = document.createElement('div');
+            e.className = 'car-sprite enemy';
+            e.style.backgroundImage = carAssets[Math.floor(Math.random()*3)];
+            e.style.transform = 'rotate(180deg)';
+            e.style.left = Math.random() * 320 + 20 + 'px';
+            e.style.top = '-120px';
+            document.getElementById('game-container').appendChild(e);
+            moveObj(e, 8 + (score/15), true);
         }
 
-        function moveElement(el, speed, isEnemy) {
-            let y = -150;
+        function createOil() {
+            const o = document.createElement('div');
+            o.className = 'oil';
+            o.style.left = Math.random() * 320 + 20 + 'px';
+            o.style.top = '-100px';
+            document.getElementById('game-container').appendChild(o);
+            moveObj(o, 7, false);
+        }
+
+        function moveObj(el, speed, isEnemy) {
+            let y = -120;
             let move = setInterval(() => {
                 if(!gameActive) { clearInterval(move); el.remove(); return; }
                 
-                let currentSpeed = isNitro ? speed * 2 : speed;
-                y += currentSpeed;
+                let s = nitroActive ? speed * 2 : speed;
+                y += s;
                 el.style.top = y + 'px';
 
                 let pr = document.getElementById('player').getBoundingClientRect();
                 let er = el.getBoundingClientRect();
 
-                if (!(pr.top > er.bottom || pr.bottom < er.top || pr.left > er.right || pr.right < er.left)) {
-                    if(isEnemy) { gameOver(); clearInterval(move); }
-                    else if(!isSkidding) { // Olja
+                if(!(pr.top > er.bottom || pr.bottom < er.top || pr.left > er.right || pr.right < er.left)) {
+                    if(isEnemy) { endGame(); }
+                    else if(!isSkidding) {
                         isSkidding = true;
-                        document.getElementById('player').style.transform = 'rotate(25deg)';
-                        setTimeout(() => { 
-                            isSkidding = false; 
-                            document.getElementById('player').style.transform = 'rotate(0deg)';
-                        }, 800);
+                        document.getElementById('player').style.transform = 'rotate(30deg)';
+                        setTimeout(() => { isSkidding = false; document.getElementById('player').style.transform = 'rotate(0)'; }, 600);
                     }
                 }
 
-                if (y > 750) {
-                    clearInterval(move);
-                    el.remove();
-                    if(isEnemy) {
-                        score++;
-                        cash += isNitro ? 30 : 15;
-                        document.getElementById('current-score').innerText = score;
+                if(y > 800) {
+                    clearInterval(move); el.remove();
+                    if(isEnemy) { 
+                        score++; cash += (nitroActive ? 40 : 20); 
+                        document.getElementById('ui-score').innerText = score;
                         updateUI();
-                        checkLevel();
+                        if(score > 50) document.getElementById('game-container').className = 'neon';
+                        else if(score > 20) document.getElementById('game-container').className = 'desert';
                     }
                 }
             }, 20);
         }
 
-        function checkLevel() {
-            const g = document.getElementById('game-container');
-            if(score > 40) g.className = 'neon';
-            else if(score > 20) g.className = 'desert';
-        }
-
-        function gameOver() {
+        function endGame() {
             gameActive = false;
             document.getElementById('game-over').style.display = 'flex';
-            document.getElementById('final-score').innerText = "Poäng: " + score;
+            document.getElementById('final-score').innerText = "POÄNG: " + score;
         }
 
         function showMenu() {
@@ -207,19 +194,26 @@
         }
 
         document.addEventListener('keydown', (e) => {
-            if (!gameActive || isSkidding) return;
-            if (e.key === 'ArrowLeft' && playerX > 20) playerX -= 50;
-            if (e.key === 'ArrowRight' && playerX < 320) playerX += 50;
-            if (e.code === 'Space') { 
-                isNitro = true; 
-                document.getElementById('player').style.filter = 'drop-shadow(0 0 10px red) brightness(1.2)';
+            if(!gameActive || isSkidding) return;
+            if(e.key === 'ArrowLeft' && playerX > 30) playerX -= 60;
+            if(e.key === 'ArrowRight' && playerX < 310) playerX += 60;
+            if(e.code === 'Space') { 
+                nitroActive = true; 
+                document.getElementById('player').classList.add('nitro-fx');
+                document.getElementById('nitro-fill').style.width = '100%';
             }
             document.getElementById('player').style.left = playerX + 'px';
         });
 
-        document.addEventListener('keyup', (e) => {
-            if (e.code === 'Space') { isNitro = false; document.getElementById('player').style.filter = ''; }
+        document.addEventListener('keyup', (e) => { 
+            if(e.code === 'Space') { 
+                nitroActive = false; 
+                document.getElementById('player').classList.remove('nitro-fx');
+                document.getElementById('nitro-fill').style.width = '0%';
+            } 
         });
+
+        updateUI();
     </script>
 </body>
 </html>
