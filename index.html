@@ -2,6 +2,195 @@
 <html lang="sv">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mewad Games | Portalen</title>
+    <style>
+        :root {
+            --p: #ff6b11; /* Orange */
+            --s: #3498db; /* Blå */
+            --g: #f1c40f; /* Guld */
+            --d: #0a0a0a; /* Bakgrund */
+            --c: #161616; /* Kort */
+        }
+
+        body {
+            margin: 0; font-family: 'Segoe UI', sans-serif;
+            background: var(--d); color: white;
+            overflow-x: hidden; min-height: 100vh;
+            display: flex; flex-direction: column; align-items: center;
+        }
+
+        /* ANIMERAD NEON-BAKGRUND */
+        .bg-animate {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(45deg, #0a0a0a, #1a1a2e, #0a0a0a, #1a0a1a);
+            background-size: 400% 400%; animation: gradientBG 15s ease infinite;
+            z-index: -1;
+        }
+        @keyframes gradientBG { 0% {background-position: 0% 50%;} 50% {background-position: 100% 50%;} 100% {background-position: 0% 50%;} }
+
+        header {
+            text-align: center; padding: 60px 20px; width: 100%;
+            border-bottom: 3px solid var(--p); background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            font-size: 4rem; margin: 0; color: var(--p);
+            text-shadow: 0 0 20px var(--p); letter-spacing: 5px;
+            font-weight: 900;
+        }
+
+        .container {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 40px; padding: 60px 20px; max-width: 1200px; width: 90%;
+        }
+
+        /* SPELKORT DESIGN */
+        .card {
+            background: var(--c); border-radius: 25px; border: 2px solid #333;
+            text-decoration: none; color: white; overflow: hidden;
+            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative; display: flex; flex-direction: column;
+        }
+        .card:hover {
+            transform: translateY(-15px); border-color: var(--p);
+            box-shadow: 0 0 30px rgba(255, 107, 17, 0.4);
+        }
+
+        .card-img {
+            height: 220px; background: #222; display: flex;
+            align-items: center; justify-content: center; font-size: 100px;
+            transition: 0.3s;
+        }
+        .card:hover .card-img { font-size: 120px; background: #2a2a2a; }
+
+        .card-info { padding: 30px; flex-grow: 1; text-align: center; }
+        .card-info h2 { color: var(--p); margin: 0 0 15px 0; font-size: 1.8rem; }
+        .card-info p { color: #bbb; line-height: 1.6; margin: 0; }
+
+        /* HUD-KNAPPAR (SHOP & LB) */
+        .nav-btns { margin-top: 25px; display: flex; justify-content: center; gap: 15px; }
+        .nav-btns button { 
+            background: rgba(255,255,255,0.05); border: 2px solid var(--g); color: var(--g); 
+            padding: 12px 25px; cursor: pointer; font-weight: bold; border-radius: 50px; 
+            transition: 0.3s; text-transform: uppercase;
+        }
+        .nav-btns button:hover { background: var(--g); color: black; box-shadow: 0 0 15px var(--g); }
+
+        /* CHATT ENHET */
+        #chat-section {
+            width: 90%; max-width: 700px; background: rgba(22, 22, 22, 0.8);
+            border: 2px solid var(--s); border-radius: 20px; margin-bottom: 60px;
+            padding: 25px; box-shadow: 0 0 25px rgba(52, 152, 219, 0.2);
+        }
+        #chat-messages { height: 180px; overflow-y: auto; border-bottom: 1px solid #444; margin-bottom: 15px; padding: 10px; font-size: 15px; }
+        .chat-input-row { display: flex; gap: 10px; }
+        #chat-msg { flex: 1; padding: 12px; background: #111; border: 1px solid #444; color: white; border-radius: 8px; }
+        .chat-send { padding: 12px 25px; background: var(--s); border: none; color: white; cursor: pointer; border-radius: 8px; font-weight: bold; }
+
+        /* MODAL POPUPS */
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal { background: #1a1a1a; padding: 40px; border-radius: 30px; border: 3px solid var(--g); text-align: center; max-width: 400px; width: 80%; }
+    </style>
+</head>
+<body>
+
+    <div class="bg-animate"></div>
+
+    <header>
+        <h1>MEWAD GAMES</h1>
+        <p style="font-size: 1.2rem; color: #888;">Din destination för high-end webbspel</p>
+        <div class="nav-btns">
+            <button onclick="openModal('shop')">🛒 Portalen Shop</button>
+            <button onclick="openModal('lb')">🏆 Leaderboard</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- SHAWARMA SIMULATOR -->
+        <a href="https://mewad1945.github.io/Shawarma-Simulator/" class="card">
+            <div class="card-img">🥙</div>
+            <div class="card-info">
+                <h2>Shawarma Simulator</h2>
+                <p>Grinda, sälj rullar och bli universums härskare i det mest episka klickerspelet någonsin.</p>
+            </div>
+        </a>
+
+        <!-- BILSPELET -->
+        <a href="https://mewad1945.github.io/Bilspelet/" class="card">
+            <div class="card-img">🏎️</div>
+            <div class="card-info">
+                <h2>Bilspelet</h2>
+                <p>Full gas! Utmana dina reflexer och slå nya rekord i Mewads snabbaste racingspel.</p>
+            </div>
+        </a>
+    </div>
+
+    <!-- CHATT SYSTEM -->
+    <div id="chat-section">
+        <h3 style="margin-top:0; color: var(--s);">💬 MEWAD GLOBAL CHATT</h3>
+        <div id="chat-messages"><b>System:</b> Välkommen tillbaka! Här kan du chatta med andra spelare.</div>
+        <div class="chat-input-row">
+            <input type="text" id="chat-msg" placeholder="Skriv ett meddelande...">
+            <button class="chat-send" onclick="sendChat()">SKICKA</button>
+        </div>
+    </div>
+
+    <!-- MODAL FÖR SHOP & LEADERBOARD -->
+    <div id="modal-overlay" class="overlay" onclick="closeModal()">
+        <div class="modal" onclick="event.stopPropagation()">
+            <h2 id="modal-title" style="color:var(--g)">TITEL</h2>
+            <div id="modal-content" style="margin: 20px 0; line-height: 1.6;">INNEHÅLL</div>
+            <button onclick="closeModal()" style="padding: 10px 30px; border-radius: 20px; border:none; background:white; cursor:pointer; font-weight:bold;">STÄNG</button>
+        </div>
+    </div>
+
+    <script>
+        // CHATT LOGIK (Lokalt sparande för demo-effekt)
+        function sendChat() {
+            const input = document.getElementById('chat-msg');
+            if(!input.value) return;
+            const box = document.getElementById('chat-messages');
+            const user = localStorage.getItem('shawarma_player_name') || "Spelare";
+            box.innerHTML += `<div><b style="color:var(--p)">${user}:</b> ${input.value}</div>`;
+            box.scrollTop = box.scrollHeight;
+            input.value = "";
+        }
+
+        // MODAL HANTERING
+        function openModal(type) {
+            const overlay = document.getElementById('modal-overlay');
+            const title = document.getElementById('modal-title');
+            const content = document.getElementById('modal-content');
+            
+            if(type === 'shop') {
+                title.innerText = "🛒 PORTALEN SHOP";
+                content.innerHTML = "Här kan du snart köpa exklusiva skins för portalen!<br><br><b>Kebab-tema:</b> 10,000 SC<br><b>Neon-tema:</b> 50,000 SC";
+            } else {
+                title.innerText = "🏆 TOPP MASTERS";
+                let lb = JSON.parse(localStorage.getItem('shawarma_lb') || "[]");
+                content.innerHTML = lb.length > 0 ? lb.map((x,i) => `<div>#${i+1} ${x.n} - $${x.m}</div>`).join('') : "Inga resultat än. In och grinda!";
+            }
+            overlay.style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('modal-overlay').style.display = 'none';
+        }
+
+        // ENTER-KNAPP FÖR CHATT
+        document.getElementById('chat-msg').addEventListener('keypress', (e) => {
+            if(e.key === 'Enter') sendChat();
+        });
+    </script>
+
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
     <title>Super Racer 7.0 - POLICE CHASE</title>
     <style>
         :root { --road: #333; --grass: #2d5a27; --line: #fff; }
