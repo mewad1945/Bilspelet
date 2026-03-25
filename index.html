@@ -2,6 +2,266 @@
 <html lang="sv">
 <head>
     <meta charset="UTF-8">
+    <title>Neon Racer Pro - Garage & Police Alert</title>
+    <style>
+        :root { --p: #00ff41; --s: #ff0055; --neon: #00d4ff; --gold: #f1c40f; }
+        body { margin: 0; background: #050505; color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; display: flex; justify-content: center; }
+        
+        #game-wrap { position: relative; width: 450px; height: 100vh; background: #111; border-left: 4px solid #333; border-right: 4px solid #333; overflow: hidden; }
+        canvas { display: block; }
+
+        /* MENYER */
+        .menu-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; text-align: center; }
+        .btn { padding: 12px 30px; margin: 8px; background: var(--s); border: none; color: white; font-weight: bold; cursor: pointer; border-radius: 5px; font-size: 18px; transition: 0.2s; width: 220px; }
+        .btn:hover:not(.disabled) { transform: scale(1.05); background: var(--p); color: black; }
+        .btn.disabled { opacity: 0.3; cursor: not-allowed; }
+
+        /* HUD */
+        #hud { position: absolute; top: 20px; left: 20px; pointer-events: none; z-index: 50; }
+        .stat { font-size: 22px; font-weight: bold; color: var(--p); text-shadow: 2px 2px 5px black; margin-bottom: 5px; }
+        #boost-bar-wrap { width: 180px; height: 8px; background: #333; border-radius: 4px; overflow: hidden; margin-top: 5px; }
+        #boost-bar { width: 0%; height: 100%; background: var(--neon); box-shadow: 0 0 10px var(--neon); transition: 0.1s; }
+
+        /* VARNINGSLJUS */
+        #alert-light { position: absolute; top: 20px; right: 20px; width: 30px; height: 30px; border-radius: 50%; background: #222; border: 2px solid #444; }
+        .red-alert { background: #ff0000 !important; box-shadow: 0 0 20px #ff0000; animation: blink 0.5s infinite; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+<div id="game-wrap">
+    <div id="hud">
+        <div class="stat">💰 $<span id="money-display">0</span></div>
+        <div class="stat" style="color:var(--gold)">🏆 <span id="dist-display">0</span> km</div>
+        <div id="boost-text" style="font-size:11px; color:var(--neon)">NEON BOOST (SPACE)</div>
+        <div id="boost-bar-wrap"><div id="boost-bar"></div></div>
+    </div>
+
+    <div id="alert-light"></div>
+
+    <div id="start-menu" class="menu-overlay">
+        <h1 style="color:var(--neon); font-size: 36px; margin-bottom: 20px;">NEON RACER V2</h1>
+        <button class="btn" onclick="startGame()">STARTA RACET</button>
+        <button class="btn" style="background:#8e44ad" onclick="showGarage()">GARAGE</button>
+        <button id="way-btn" class="btn disabled" onclick="changeWay()">BYT VÄG (Låst 1km)</button>
+    </div>
+
+    <div id="garage-ui" class="menu-overlay" style="display:none;">
+        <h2 style="color:var(--gold)">GARAGE</h2>
+        <div id="car-list" style="margin-bottom: 20px;"></div>
+        <button class="btn" style="background:#444" onclick="hideGarage()">TILLBAKA</button>
+    </div>
+
+    <canvas id="canvas"></canvas>
+</div>
+
+<script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = 450;
+    canvas.height = window.innerHeight;
+
+    let money = parseInt(localStorage.getItem('car_money')) || 0;
+    let totalDist = parseFloat(localStorage.getItem('car_total_dist')) || 0;
+    let distance = 0;
+    let gameActive = false;
+    let speed = 5;
+    let boostCharge = 0;
+    let isBoosting = false;
+    let playerX = 225;
+    let currentCar = parseInt(localStorage.getItem('current_car')) || 0;
+    let ownedCars = JSON.parse(localStorage.getItem('owned_cars')) || [0];
+    let isRedAlert = false;
+    let wayType = "city"; 
+
+    const carModels = [
+        { name: "Standard", price: 0, color: "#3498db", baseSpeed: 5 },
+        { name: "Sport", price: 1000, color: "#f1c40f", baseSpeed: 7 },
+        { name: "Neon Beast", price: 5000, color: "#00ff41", baseSpeed: 10 }
+    ];
+
+    let enemies = [];
+    let oilSlicks = [];
+
+    function drawCar(x, y, color, isPlayer = false, isPolice = false) {
+        ctx.save();
+        ctx.translate(x, y);
+        if(isPlayer && isBoosting) { ctx.shadowBlur = 20; ctx.shadowColor = "cyan"; }
+        
+        // Kaross
+        ctx.fillStyle = isPolice ? "#222" : color;
+        ctx.beginPath(); ctx.roundRect(-20, -40, 40, 80, 8); ctx.fill();
+        ctx.strokeStyle = isPolice ? (Date.now() % 200 < 100 ? "red" : "blue") : "black"; 
+        ctx.lineWidth = 3; ctx.stroke();
+
+        // Rutor
+        ctx.fillStyle = "#add8e6";
+        ctx.fillRect(-15, -18, 30, 22); // Fram
+        ctx.fillRect(-15, 20, 30, 10);  // Bak
+
+        // Hjul
+        ctx.fillStyle = "#111";
+        ctx.fillRect(-24, -30, 8, 20); ctx.fillRect(16, -30, 8, 20);
+        ctx.fillRect(-24, 15, 8, 20); ctx.fillRect(16, 15, 8, 20);
+        ctx.restore();
+    }
+
+    function spawnEnemy() {
+        if(!gameActive) return;
+        let lane = [100, 225, 350][Math.floor(Math.random()*3)];
+        let police = isRedAlert || Math.random() < 0.1;
+        enemies.push({ x: lane, y: -100, isPolice: police, passed: false, speedMult: police ? 1.4 : 0.8 });
+        
+        let nextSpawn = isRedAlert ? 800 : (1500 - (speed * 50));
+        setTimeout(spawnEnemy, Math.max(500, nextSpawn));
+    }
+
+    function spawnOil() {
+        if(!gameActive) return;
+        oilSlicks.push({ x: Math.random()*300 + 75, y: -100 });
+        setTimeout(spawnOil, 5000);
+    }
+
+    setInterval(() => {
+        if(!gameActive) return;
+        isRedAlert = true;
+        document.getElementById('alert-light').classList.add('red-alert');
+        new Audio('https://soundjay.com').play();
+        setTimeout(() => {
+            isRedAlert = false;
+            document.getElementById('alert-light').classList.remove('red-alert');
+        }, 5000);
+    }, 30000);
+
+    function startGame() {
+        document.getElementById('start-menu').style.display = 'none';
+        gameActive = true;
+        distance = 0;
+        enemies = [];
+        oilSlicks = [];
+        speed = carModels[currentCar].baseSpeed;
+        spawnEnemy();
+        spawnOil();
+        animate();
+    }
+
+    function animate() {
+        if(!gameActive) return;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Bana
+        ctx.fillStyle = wayType === "space" ? "#000022" : "#1a1a1a";
+        ctx.fillRect(0,0, canvas.width, canvas.height);
+        
+        // Linjer
+        ctx.setLineDash([40, 40]);
+        ctx.lineDashOffset = -(distance * 500);
+        ctx.strokeStyle = wayType === "space" ? "cyan" : "white";
+        ctx.beginPath(); ctx.moveTo(160, 0); ctx.lineTo(160, canvas.height); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(290, 0); ctx.lineTo(290, canvas.height); ctx.stroke();
+
+        // Olja
+        oilSlicks.forEach((oil, i) => {
+            oil.y += speed;
+            ctx.fillStyle = "rgba(0,0,0,0.6)";
+            ctx.beginPath(); ctx.ellipse(oil.x, oil.y, 30, 20, 0, 0, Math.PI*2); ctx.fill();
+            if(Math.hypot(playerX - oil.x, (canvas.height-100) - oil.y) < 40) playerX += (Math.random()-0.5)*15;
+            if(oil.y > canvas.height + 100) oilSlicks.splice(i, 1);
+        });
+
+        // Fiender
+        enemies.forEach((en, i) => {
+            en.y += speed * en.speedMult;
+            drawCar(en.x, en.y, "#e74c3c", false, en.isPolice);
+
+            if(!en.passed && en.y > canvas.height - 100) {
+                money += 10;
+                en.passed = true;
+                document.getElementById('money-display').innerText = money;
+            }
+
+            if(Math.abs(playerX - en.x) < 38 && Math.abs((canvas.height-100) - en.y) < 75) gameOver();
+            if(en.y > canvas.height + 100) enemies.splice(i, 1);
+        });
+
+        // Spelare
+        drawCar(playerX, canvas.height - 100, carModels[currentCar].color, true);
+
+        // HUD
+        distance += speed / 5000;
+        if(boostCharge < 100 && !isBoosting) boostCharge += 0.2;
+        document.getElementById('dist-display').innerText = distance.toFixed(2);
+        document.getElementById('boost-bar').style.width = boostCharge + "%";
+
+        requestAnimationFrame(animate);
+    }
+
+    function gameOver() {
+        gameActive = false;
+        totalDist += distance;
+        localStorage.setItem('car_money', money);
+        localStorage.setItem('car_total_dist', totalDist);
+        alert("CRASH! Pengar sparade.");
+        location.reload();
+    }
+
+    window.onkeydown = (e) => {
+        if(e.key === "ArrowLeft" && playerX > 100) playerX -= 125;
+        if(e.key === "ArrowRight" && playerX < 350) playerX += 125;
+        if(e.code === "Space" && boostCharge >= 100) {
+            isBoosting = true; boostCharge = 0; speed *= 1.8;
+            setTimeout(() => { isBoosting = false; speed = carModels[currentCar].baseSpeed; }, 5000);
+        }
+    };
+
+    function showGarage() {
+        document.getElementById('start-menu').style.display = 'none';
+        document.getElementById('garage-ui').style.display = 'flex';
+        renderShop();
+    }
+    function hideGarage() {
+        document.getElementById('garage-ui').style.display = 'none';
+        document.getElementById('start-menu').style.display = 'flex';
+    }
+    function renderShop() {
+        const list = document.getElementById('car-list');
+        list.innerHTML = "";
+        carModels.forEach((car, i) => {
+            const owned = ownedCars.includes(i);
+            list.innerHTML += `<div style="background:#222; margin:10px; padding:15px; border-radius:8px; display:flex; justify-content:space-between; width:300px">
+                <span>${car.name}</span>
+                <button onclick="${owned ? 'selectCar('+i+')' : 'buyCar('+i+')'}">${owned ? (currentCar==i?'VALD':'VÄLJ') : '$'+car.price}</button>
+            </div>`;
+        });
+    }
+    function buyCar(i) {
+        if(money >= carModels[i].price) {
+            money -= carModels[i].price;
+            ownedCars.push(i);
+            localStorage.setItem('owned_cars', JSON.stringify(ownedCars));
+            renderShop();
+        }
+    }
+    function selectCar(i) { currentCar = i; localStorage.setItem('current_car', i); renderShop(); }
+
+    function changeWay() {
+        if(totalDist >= 1) {
+            wayType = wayType === "city" ? "space" : "city";
+            alert("Väg ändrad!");
+        }
+    }
+
+    // Init
+    document.getElementById('money-display').innerText = money;
+    if(totalDist >= 1) document.getElementById('way-btn').classList.remove('disabled');
+</script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
     <title>Neon Racer - Traffic Alert & Space Way</title>
     <style>
         :root { --p: #00ff41; --s: #ff0055; --neon: #00d4ff; --gold: #f1c40f; }
