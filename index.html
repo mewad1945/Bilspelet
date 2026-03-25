@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <title>Super Car Traffic Dodge</title>
+    <style>
+        :root { --road-color: #333; --line-color: #fff; }
+        body { margin: 0; background: #1a1a1a; display: flex; justify-content: center; align-items: center; height: 100vh; color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
+        
+        /* Spelplanen */
+        #game-container { position: relative; width: 400px; height: 700px; background: var(--road-color); border-left: 8px solid var(--line-color); border-right: 8px solid var(--line-color); overflow: hidden; display: none; }
+        .lane-line { position: absolute; left: 50%; width: 6px; height: 80px; background: var(--line-color); transform: translateX(-50%); animation: moveRoad 0.6s linear infinite; }
+        @keyframes moveRoad { 0% { top: -100px; } 100% { top: 700px; } }
+
+        /* Bilar */
+        #player { position: absolute; bottom: 30px; left: 175px; width: 55px; z-index: 10; transition: left 0.1s ease-out; }
+        .enemy { position: absolute; width: 55px; z-index: 5; }
+
+        /* UI Paneler */
+        .overlay { position: absolute; width: 400px; height: 700px; background: rgba(0,0,0,0.85); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; text-align: center; }
+        .btn { padding: 15px 40px; font-size: 20px; background: #e74c3c; color: white; border: none; cursor: pointer; border-radius: 5px; margin-top: 20px; transition: 0.3s; }
+        .btn:hover { background: #c0392b; transform: scale(1.05); }
+        #stats { position: absolute; top: 10px; left: 10px; z-index: 50; font-size: 18px; }
+
+        /* Garage */
+        .shop-item { margin: 15px; border: 1px solid #444; padding: 10px; width: 250px; border-radius: 10px; }
+        .shop-img { width: 60px; display: block; margin: 0 auto; }
+        #money-display { color: #f1c40f; font-weight: bold; font-size: 24px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+    <!-- START MENY / GARAGE -->
+    <div id="start-menu" class="overlay">
+        <h1>BILSPELET 2.0</h1>
+        <div id="money-display">Cash: <span id="cash">0</span> kr</div>
+        
+        <div id="garage">
+            <!-- Aston Martin (Gratis) -->
+            <div class="shop-item">
+                <img src="https://toppng.com/uploads/preview/aston-martin-one77-01-top-down-car-sprite-1156302814774vtgthfmb.png" class="shop-img">
+                <button class="btn" onclick="selectCar(0, 0)">Välj Aston Martin</button>
+            </div>
+            <!-- Ny bil 1 -->
+            <div class="shop-item">
+                <img src="https://freepik.com" class="shop-img">
+                <button class="btn" id="buy-1" onclick="selectCar(1, 500)">Köp Blue Sports (500 kr)</button>
+            </div>
+        </div>
+        <p>Använd PILTANGENTER för att styra!</p>
+    </div>
+
+    <!-- GAME OVER MENY -->
+    <div id="game-over" class="overlay" style="display: none;">
+        <h1 style="color: #e74c3c;">YOU LOST!</h1>
+        <p id="final-score">Poäng: 0</p>
+        <button class="btn" onclick="startGame()">PLAY AGAIN</button>
+        <button class="btn" style="background: #555;" onclick="showMenu()">GARAGE</button>
+    </div>
+
+    <!-- SJÄLVA SPELET -->
+    <div id="stats">
+        Poäng: <span id="current-score">0</span><br>
+        Cash: <span id="current-cash">0</span> kr
+    </div>
+    <div id="game-container">
+        <div class="lane-line" style="top: 0px;"></div>
+        <div class="lane-line" style="top: 250px;"></div>
+        <div class="lane-line" style="top: 500px;"></div>
+        <img id="player" src="" alt="Player">
+    </div>
+
+    <script>
+        const carModels = [
+            "https://toppng.com/uploads/preview/aston-martin-one77-01-top-down-car-sprite-1156302814774vtgthfmb.png",
+            "https://freepik.com"
+        ];
+        
+        const enemyModels = [
+            "https://freepik.com",
+            "https://toppng.com/uploads/preview/aston-martin-one77-01-top-down-car-sprite-1156302814774vtgthfmb.png"
+        ];
+
+        let cash = parseInt(localStorage.getItem('carCash')) || 0;
+        let unlockedCars = JSON.parse(localStorage.getItem('unlocked')) || [true, false];
+        let currentCarIdx = 0;
+        let gameActive = false;
+        let score = 0;
+        let playerX = 175;
+        let enemyInterval;
+
+        // Uppdatera UI vid start
+        updateUI();
+
+        function updateUI() {
+            document.getElementById('cash').innerText = cash;
+            document.getElementById('current-cash').innerText = cash;
+            localStorage.setItem('carCash', cash);
+            localStorage.setItem('unlocked', JSON.stringify(unlockedCars));
+            
+            if(unlockedCars[1]) document.getElementById('buy-1').innerText = "Välj Blue Sports";
+        }
+
+        function selectCar(idx, price) {
+            if (!unlockedCars[idx]) {
+                if (cash >= price) {
+                    cash -= price;
+                    unlockedCars[idx] = true;
+                    updateUI();
+                } else {
+                    alert("Du behöver mer pengar!");
+                    return;
+                }
+            }
+            currentCarIdx = idx;
+            startGame();
+        }
+
+        function startGame() {
+            gameActive = true;
+            score = 0;
+            playerX = 175;
+            document.getElementById('current-score').innerText = "0";
+            document.getElementById('player').src = carModels[currentCarIdx];
+            document.getElementById('start-menu').style.display = 'none';
+            document.getElementById('game-over').style.display = 'none';
+            document.getElementById('game-container').style.display = 'block';
+            
+            // Rensa gamla bilar
+            document.querySelectorAll('.enemy').forEach(e => e.remove());
+            
+            clearInterval(enemyInterval);
+            enemyInterval = setInterval(createEnemy, 1200);
+        }
+
+        function showMenu() {
+            document.getElementById('game-over').style.display = 'none';
+            document.getElementById('game-container').style.display = 'none';
+            document.getElementById('start-menu').style.display = 'flex';
+            updateUI();
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (!gameActive) return;
+            if (e.key === 'ArrowLeft' && playerX > 20) playerX -= 40;
+            if (e.key === 'ArrowRight' && playerX < 320) playerX += 40;
+            document.getElementById('player').style.left = playerX + 'px';
+        });
+
+        function createEnemy() {
+            if (!gameActive) return;
+            const enemy = document.createElement('img');
+            enemy.classList.add('enemy');
+            enemy.src = enemyModels[Math.floor(Math.random() * enemyModels.length)];
+            enemy.style.left = Math.floor(Math.random() * 320) + 10 + 'px';
+            enemy.style.top = '-150px';
+            document.getElementById('game-container').appendChild(enemy);
+
+            let enemyY = -150;
+            let move = setInterval(() => {
+                if (!gameActive) { clearInterval(move); return; }
+                
+                enemyY += 7 + (score / 10); // Blir snabbare med tiden
+                enemy.style.top = enemyY + 'px';
+
+                // Krockdetektering
+                let p = document.getElementById('player').getBoundingClientRect();
+                let e = enemy.getBoundingClientRect();
+                if (!(p.top > e.bottom || p.bottom < e.top || p.left > e.right || p.right < e.left)) {
+                    gameOver();
+                }
+
+                if (enemyY > 750) {
+                    enemy.remove();
+                    score++;
+                    cash += 10; // Tjäna pengar för varje bil du undviker!
+                    document.getElementById('current-score').innerText = score;
+                    updateUI();
+                    clearInterval(move);
+                }
+            }, 20);
+        }
+
+        function gameOver() {
+            gameActive = false;
+            clearInterval(enemyInterval);
+            document.getElementById('game-over').style.display = 'flex';
+            document.getElementById('final-score').innerText = "Poäng: " + score;
+            updateUI();
+        }
+    </script>
+</body>
+</html>
