@@ -2,406 +2,227 @@
 <html lang="sv">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mewad Games | Portalen</title>
+    <title>Mewad Racing - Neon Night</title>
     <style>
-        :root {
-            --p: #ff6b11; /* Orange */
-            --s: #3498db; /* Blå */
-            --g: #f1c40f; /* Guld */
-            --d: #0a0a0a; /* Bakgrund */
-            --c: #161616; /* Kort */
-        }
+        :root { --p: #00ff41; --s: #ff0055; --blue: #00d4ff; --bg: #050505; }
+        body { margin: 0; background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; display: flex; }
+        
+        /* --- SPELYTA --- */
+        #game-container { position: relative; width: 400px; height: 100vh; background: #111; overflow: hidden; border-left: 4px solid #333; border-right: 4px solid #333; }
+        .road-line { position: absolute; width: 6px; height: 50px; background: rgba(255,255,255,0.3); left: 50%; transform: translateX(-50%); }
+        
+        #player { position: absolute; width: 40px; height: 70px; z-index: 10; transition: transform 0.1s; filter: drop-shadow(0 0 10px var(--blue)); font-size: 40px; display: flex; align-items: center; justify-content: center; }
+        .enemy { position: absolute; width: 40px; height: 70px; font-size: 40px; display: flex; align-items: center; justify-content: center; }
+        .oil { position: absolute; width: 50px; height: 50px; background: rgba(0,0,0,0.8); border-radius: 50%; filter: blur(5px); }
+        .boost { position: absolute; width: 30px; height: 30px; font-size: 25px; animation: pulse 1s infinite; }
+        
+        /* --- UI & SIDEBAR --- */
+        #ui { flex: 1; padding: 20px; display: flex; flex-direction: column; background: #0a0a0a; }
+        .stat-box { font-size: 24px; font-weight: bold; margin-bottom: 10px; color: var(--p); }
+        #garage { background: #161616; padding: 15px; border-radius: 10px; margin-top: 20px; border: 1px solid var(--blue); }
+        .car-opt { font-size: 30px; cursor: pointer; padding: 10px; border: 1px solid #333; margin: 5px; display: inline-block; border-radius: 5px; }
+        .car-opt:hover { background: #222; }
 
-        body {
-            margin: 0; font-family: 'Segoe UI', sans-serif;
-            background: var(--d); color: white;
-            overflow-x: hidden; min-height: 100vh;
-            display: flex; flex-direction: column; align-items: center;
-        }
+        #leaderboard { margin-top: auto; padding: 10px; background: #000; border-top: 2px solid var(--s); font-size: 14px; }
+        #chat { height: 150px; background: #111; border: 1px solid #333; margin-top: 10px; overflow-y: auto; padding: 5px; font-size: 12px; }
 
-        /* ANIMERAD NEON-BAKGRUND */
-        .bg-animate {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(45deg, #0a0a0a, #1a1a2e, #0a0a0a, #1a0a1a);
-            background-size: 400% 400%; animation: gradientBG 15s ease infinite;
-            z-index: -1;
-        }
-        @keyframes gradientBG { 0% {background-position: 0% 50%;} 50% {background-position: 100% 50%;} 100% {background-position: 0% 50%;} }
-
-        header {
-            text-align: center; padding: 60px 20px; width: 100%;
-            border-bottom: 3px solid var(--p); background: rgba(0,0,0,0.7);
-            backdrop-filter: blur(10px);
-        }
-
-        h1 {
-            font-size: 4rem; margin: 0; color: var(--p);
-            text-shadow: 0 0 20px var(--p); letter-spacing: 5px;
-            font-weight: 900;
-        }
-
-        .container {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 40px; padding: 60px 20px; max-width: 1200px; width: 90%;
-        }
-
-        /* SPELKORT DESIGN */
-        .card {
-            background: var(--c); border-radius: 25px; border: 2px solid #333;
-            text-decoration: none; color: white; overflow: hidden;
-            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            position: relative; display: flex; flex-direction: column;
-        }
-        .card:hover {
-            transform: translateY(-15px); border-color: var(--p);
-            box-shadow: 0 0 30px rgba(255, 107, 17, 0.4);
-        }
-
-        .card-img {
-            height: 220px; background: #222; display: flex;
-            align-items: center; justify-content: center; font-size: 100px;
-            transition: 0.3s;
-        }
-        .card:hover .card-img { font-size: 120px; background: #2a2a2a; }
-
-        .card-info { padding: 30px; flex-grow: 1; text-align: center; }
-        .card-info h2 { color: var(--p); margin: 0 0 15px 0; font-size: 1.8rem; }
-        .card-info p { color: #bbb; line-height: 1.6; margin: 0; }
-
-        /* HUD-KNAPPAR (SHOP & LB) */
-        .nav-btns { margin-top: 25px; display: flex; justify-content: center; gap: 15px; }
-        .nav-btns button { 
-            background: rgba(255,255,255,0.05); border: 2px solid var(--g); color: var(--g); 
-            padding: 12px 25px; cursor: pointer; font-weight: bold; border-radius: 50px; 
-            transition: 0.3s; text-transform: uppercase;
-        }
-        .nav-btns button:hover { background: var(--g); color: black; box-shadow: 0 0 15px var(--g); }
-
-        /* CHATT ENHET */
-        #chat-section {
-            width: 90%; max-width: 700px; background: rgba(22, 22, 22, 0.8);
-            border: 2px solid var(--s); border-radius: 20px; margin-bottom: 60px;
-            padding: 25px; box-shadow: 0 0 25px rgba(52, 152, 219, 0.2);
-        }
-        #chat-messages { height: 180px; overflow-y: auto; border-bottom: 1px solid #444; margin-bottom: 15px; padding: 10px; font-size: 15px; }
-        .chat-input-row { display: flex; gap: 10px; }
-        #chat-msg { flex: 1; padding: 12px; background: #111; border: 1px solid #444; color: white; border-radius: 8px; }
-        .chat-send { padding: 12px 25px; background: var(--s); border: none; color: white; cursor: pointer; border-radius: 8px; font-weight: bold; }
-
-        /* MODAL POPUPS */
-        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: none; justify-content: center; align-items: center; z-index: 1000; }
-        .modal { background: #1a1a1a; padding: 40px; border-radius: 30px; border: 3px solid var(--g); text-align: center; max-width: 400px; width: 80%; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+        .flash-red { animation: redAlert 0.5s infinite; }
+        @keyframes redAlert { 0% { background: #111; } 50% { background: #400; } 100% { background: #111; } }
     </style>
 </head>
 <body>
 
-    <div class="bg-animate"></div>
+<div id="game-container">
+    <div id="player">🏎️</div>
+</div>
 
-    <header>
-        <h1>MEWAD GAMES</h1>
-        <p style="font-size: 1.2rem; color: #888;">Din destination för high-end webbspel</p>
-        <div class="nav-btns">
-            <button onclick="openModal('shop')">🛒 Portalen Shop</button>
-            <button onclick="openModal('lb')">🏆 Leaderboard</button>
-        </div>
-    </header>
-
-    <div class="container">
-        <!-- SHAWARMA SIMULATOR -->
-        <a href="https://mewad1945.github.io/Shawarma-Simulator/" class="card">
-            <div class="card-img">🥙</div>
-            <div class="card-info">
-                <h2>Shawarma Simulator</h2>
-                <p>Grinda, sälj rullar och bli universums härskare i det mest episka klickerspelet någonsin.</p>
-            </div>
-        </a>
-
-        <!-- BILSPELET -->
-        <a href="https://mewad1945.github.io/Bilspelet/" class="card">
-            <div class="card-img">🏎️</div>
-            <div class="card-info">
-                <h2>Bilspelet</h2>
-                <p>Full gas! Utmana dina reflexer och slå nya rekord i Mewads snabbaste racingspel.</p>
-            </div>
-        </a>
+<div id="ui">
+    <div class="stat-box">DISTANS: <span id="dist">0</span> km</div>
+    <div class="stat-box" style="color:var(--s)">FART: <span id="speed">0</span> km/h</div>
+    
+    <div id="garage">
+        <b>GARAGE (Välj bil):</b><br>
+        <span class="car-opt" onclick="changeCar('🏎️')">🏎️</span>
+        <span class="car-opt" onclick="changeCar('🚗')">🚗</span>
+        <span class="car-opt" onclick="changeCar('🚓')">🚓</span>
+        <span class="car-opt" onclick="changeCar('🚚')">🚚</span>
     </div>
 
-    <!-- CHATT SYSTEM -->
-    <div id="chat-section">
-        <h3 style="margin-top:0; color: var(--s);">💬 MEWAD GLOBAL CHATT</h3>
-        <div id="chat-messages"><b>System:</b> Välkommen tillbaka! Här kan du chatta med andra spelare.</div>
-        <div class="chat-input-row">
-            <input type="text" id="chat-msg" placeholder="Skriv ett meddelande...">
-            <button class="chat-send" onclick="sendChat()">SKICKA</button>
-        </div>
+    <div id="chat"><b>System:</b> Välkommen till Mewad Racing!<br></div>
+    <input type="text" id="chat-in" placeholder="Chatta..." style="background:#111; border:1px solid #333; color:white; padding:5px;">
+
+    <div id="leaderboard">
+        <b>🏆 TOP DRIVERS:</b>
+        <div id="lb-list"></div>
     </div>
+</div>
 
-    <!-- MODAL FÖR SHOP & LEADERBOARD -->
-    <div id="modal-overlay" class="overlay" onclick="closeModal()">
-        <div class="modal" onclick="event.stopPropagation()">
-            <h2 id="modal-title" style="color:var(--g)">TITEL</h2>
-            <div id="modal-content" style="margin: 20px 0; line-height: 1.6;">INNEHÅLL</div>
-            <button onclick="closeModal()" style="padding: 10px 30px; border-radius: 20px; border:none; background:white; cursor:pointer; font-weight:bold;">STÄNG</button>
-        </div>
-    </div>
+<script>
+    const container = document.getElementById('game-container');
+    const player = document.getElementById('player');
+    const distEl = document.getElementById('dist');
+    const speedEl = document.getElementById('speed');
+    
+    let gameActive = true;
+    let distance = 0;
+    let speed = 5;
+    let playerX = 180;
+    let laneWidth = 400;
+    let oilEffect = 0;
+    let playerName = localStorage.getItem('shawarma_name_fixed') || "Racer";
 
-    <script>
-        // CHATT LOGIK (Lokalt sparande för demo-effekt)
-        function sendChat() {
-            const input = document.getElementById('chat-msg');
-            if(!input.value) return;
-            const box = document.getElementById('chat-messages');
-            const user = localStorage.getItem('shawarma_player_name') || "Spelare";
-            box.innerHTML += `<div><b style="color:var(--p)">${user}:</b> ${input.value}</div>`;
-            box.scrollTop = box.scrollHeight;
-            input.value = "";
+    // --- SPEL-OBJEKT ---
+    let enemies = [];
+    let obstacles = [];
+    let lines = [];
+
+    // Skapa väglinjer
+    for(let i=0; i<10; i++) {
+        let line = document.createElement('div');
+        line.className = 'road-line';
+        line.style.top = (i * 100) + 'px';
+        container.appendChild(line);
+        lines.push(line);
+    }
+
+    // --- STYRNING ---
+    window.onkeydown = (e) => {
+        if(!gameActive) return;
+        let move = 20 + oilEffect;
+        if(e.key === "ArrowLeft" && playerX > 20) playerX -= move;
+        if(e.key === "ArrowRight" && playerX < 340) playerX += move;
+        player.style.left = playerX + "px";
+    };
+
+    function changeCar(emoji) { player.innerText = emoji; }
+
+    // --- LOGIK ---
+    function spawnEnemy() {
+        if(!gameActive) return;
+        let e = document.createElement('div');
+        e.className = 'enemy';
+        let isPolice = Math.random() > 0.8;
+        e.innerText = isPolice ? "🚓" : "🚘";
+        e.style.left = Math.floor(Math.random() * 340) + "px";
+        e.style.top = "-100px";
+        container.appendChild(e);
+        enemies.push({el: e, y: -100, speed: speed + (isPolice ? 2 : 0)});
+    }
+
+    function spawnObstacle() {
+        let type = Math.random();
+        let o = document.createElement('div');
+        if(type > 0.5) {
+            o.className = 'oil';
+            o.dataset.type = "oil";
+        } else {
+            o.className = 'boost';
+            o.innerText = "⚡";
+            o.dataset.type = "boost";
+        }
+        o.style.left = Math.floor(Math.random() * 340) + "px";
+        o.style.top = "-100px";
+        container.appendChild(o);
+        obstacles.push({el: o, y: -100});
+    }
+
+    // --- RÖTT LJUD & VARNING (Var 30:e sek) ---
+    setInterval(() => {
+        if(!gameActive) return;
+        container.classList.add('flash-red');
+        let audio = new Audio('https://soundjay.com');
+        audio.play();
+        setTimeout(() => container.classList.remove('flash-red'), 3000);
+    }, 30000);
+
+    // --- GAME LOOP ---
+    function update() {
+        if(!gameActive) return;
+
+        distance += speed / 100;
+        distEl.innerText = Math.floor(distance);
+        speedEl.innerText = Math.floor(speed * 20);
+
+        // Öka svårighetsgrad var 100km
+        if(Math.floor(distance) % 100 === 0 && distance > 1) {
+            speed += 0.001; 
+            container.style.background = `hsl(${distance}, 20%, 10%)`; // Ny "bana" färg
         }
 
-        // MODAL HANTERING
-        function openModal(type) {
-            const overlay = document.getElementById('modal-overlay');
-            const title = document.getElementById('modal-title');
-            const content = document.getElementById('modal-content');
-            
-            if(type === 'shop') {
-                title.innerText = "🛒 PORTALEN SHOP";
-                content.innerHTML = "Här kan du snart köpa exklusiva skins för portalen!<br><br><b>Kebab-tema:</b> 10,000 SC<br><b>Neon-tema:</b> 50,000 SC";
-            } else {
-                title.innerText = "🏆 TOPP MASTERS";
-                let lb = JSON.parse(localStorage.getItem('shawarma_lb') || "[]");
-                content.innerHTML = lb.length > 0 ? lb.map((x,i) => `<div>#${i+1} ${x.n} - $${x.m}</div>`).join('') : "Inga resultat än. In och grinda!";
-            }
-            overlay.style.display = 'flex';
-        }
-
-        function closeModal() {
-            document.getElementById('modal-overlay').style.display = 'none';
-        }
-
-        // ENTER-KNAPP FÖR CHATT
-        document.getElementById('chat-msg').addEventListener('keypress', (e) => {
-            if(e.key === 'Enter') sendChat();
+        // Flytta linjer
+        lines.forEach(l => {
+            let top = parseFloat(l.style.top) + speed;
+            if(top > window.innerHeight) top = -100;
+            l.style.top = top + "px";
         });
-    </script>
 
-</body>
-</html>
-<!DOCTYPE html>
-<html lang="sv">
-<head>
-    <meta charset="UTF-8">
-    <title>Super Racer 7.0 - POLICE CHASE</title>
-    <style>
-        :root { --road: #333; --grass: #2d5a27; --line: #fff; }
-        body { margin: 0; background: #1a1a1a; display: flex; justify-content: center; align-items: center; height: 100vh; color: white; font-family: sans-serif; overflow: hidden; }
-        
-        #game-container { position: relative; width: 400px; height: 750px; background: var(--road); border-left: 20px solid var(--grass); border-right: 20px solid var(--grass); overflow: hidden; display: none; }
-        .lane-line { position: absolute; left: 50%; width: 6px; height: 80px; background: var(--line); transform: translateX(-50%); animation: moveRoad 0.6s linear infinite; }
-        @keyframes moveRoad { 0% { top: -100px; } 100% { top: 750px; } }
-
-        /* Banor */
-        .desert { --grass: #edc9af !important; --road: #d2b48c !important; }
-        .neon { --grass: #000 !important; --road: #111 !important; --line: #0ff !important; box-shadow: 0 0 50px #0ff; }
-
-        .car-sprite { position: absolute; width: 50px; height: 90px; z-index: 10; background-size: contain; background-repeat: no-repeat; }
-        .police { animation: siren 0.2s infinite alternate; border-radius: 5px; }
-        @keyframes siren { 0% { box-shadow: 0 0 20px blue; } 100% { box-shadow: 0 0 20px red; } }
-
-        /* Trafikljus */
-        #traffic-light { position: absolute; right: 30px; top: -300px; width: 40px; height: 100px; background: #222; border-radius: 5px; z-index: 60; display: flex; flex-direction: column; align-items: center; justify-content: space-around; padding: 5px 0; border: 2px solid #555; transition: top 0.5s; }
-        .light { width: 25px; height: 25px; border-radius: 50%; background: #444; }
-        .red { background: #ff0000 !important; box-shadow: 0 0 15px red; }
-        .yellow { background: #ffaa00 !important; box-shadow: 0 0 15px orange; }
-        .green { background: #00ff00 !important; box-shadow: 0 0 15px green; }
-        #stop-line { position: absolute; width: 100%; height: 8px; background: rgba(255,255,255,0.4); top: -150px; }
-
-        .overlay { position: absolute; width: 400px; height: 750px; background: rgba(0,0,0,0.9); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; text-align: center; }
-        .btn { padding: 20px; width: 250px; margin: 10px; cursor: pointer; background: #e74c3c; color: white; border: none; border-radius: 10px; font-weight: bold; font-size: 18px; }
-        .btn:hover { background: #c0392b; transform: scale(1.05); }
-        
-        #hud { position: absolute; top: 20px; left: 20px; z-index: 50; background: rgba(0,0,0,0.8); padding: 15px; border-radius: 10px; border: 1px solid #444; font-family: monospace; }
-    </style>
-</head>
-<body>
-
-    <div id="menu" class="overlay">
-        <h1 style="color:#e74c3c; font-size: 40px; margin-bottom: 5px;">SUPER RACER 7.0</h1>
-        <div style="color:#f1c40f; margin-bottom: 20px;">
-            💰 CASH: <span id="m-cash">0</span> kr | 🛣️ KM: <span id="m-dist">0</span>
-        </div>
-        <button class="btn" onclick="startGame()">STARTA SPELET</button>
-        <p style="color:#888;">Undvik polisen & trafikljusen!</p>
-    </div>
-
-    <div id="game-over" class="overlay" style="display:none;">
-        <h1 style="color:#e74c3c">BUSTED / CRASHED</h1>
-        <p id="stats-final"></p>
-        <button class="btn" onclick="startGame()">FÖRSÖK IGEN</button>
-        <button class="btn" style="background:#555" onclick="location.reload()">GARAGE</button>
-    </div>
-
-    <div id="hud">
-        🏁 DISTANS: <span id="h-dist">0</span>m<br>
-        💰 CASH: <span id="h-cash">0</span>kr<br>
-        🚦 LJUS: <span id="h-light" style="font-weight:bold">KÖR</span>
-    </div>
-
-    <div id="game-container">
-        <div id="traffic-light">
-            <div id="light-r" class="light"></div>
-            <div id="light-y" class="light"></div>
-            <div id="light-g" class="light"></div>
-        </div>
-        <div id="stop-line"></div>
-        <div class="lane-line" style="top:0"></div>
-        <div class="lane-line" style="top:250px"></div>
-        <div class="lane-line" style="top:500px"></div>
-        <div id="player" class="car-sprite"></div>
-    </div>
-
-    <script>
-        const carSVG = "url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MCIgaGVpZ2h0PSI5MCI+PHJlY3QgeD0iNSIgeT0iNSIgd2lkdGg9IjQwIiBoZWlnaHQ9IjgwIiByeD0iMTAiIGZpbGw9IiMzNDk4ZGIiLz48L3N2Zz4=')";
-        const policeSVG = "url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MCIgaGVpZ2h0PSI5MCI+PHJlY3QgeD0iNSIgeT0iNSIgd2lkdGg9IjQwIiBoZWlnaHQ9IjgwIiByeD0iMTAiIGZpbGw9IiMwMDAiLz48cmVjdCB4PSIxMCIgeT0iNSIgd2lkdGg9IjMwIiBoZWlnaHQ9IjUiIGZpbGw9ImJsdWUiLz48L3N2Zz4=')";
-
-        let cash = parseInt(localStorage.getItem('carCash')) || 0;
-        let totalDist = parseInt(localStorage.getItem('carDist')) || 0;
-        let gameActive = false;
-        let score = 0;
-        let playerX = 175;
-        let nitro = false;
-        let currentLight = 'green';
-
-        document.getElementById('m-cash').innerText = cash;
-        document.getElementById('m-dist').innerText = (totalDist/1000).toFixed(1);
-
-        function startGame() {
-            gameActive = true; score = 0; playerX = 175;
-            document.getElementById('menu').style.display = 'none';
-            document.getElementById('game-over').style.display = 'none';
-            document.getElementById('game-container').style.display = 'block';
+        // Hantera fiender
+        enemies.forEach((en, i) => {
+            en.y += en.speed;
+            en.el.style.top = en.y + "px";
             
-            const p = document.getElementById('player');
-            p.style.backgroundImage = carSVG;
-            p.style.left = playerX + 'px';
-            p.style.bottom = "30px";
+            // Kollision
+            let rect1 = player.getBoundingClientRect();
+            let rect2 = en.el.getBoundingClientRect();
+            if(!(rect1.right < rect2.left || rect1.left > rect2.right || rect1.bottom < rect2.top || rect1.top > rect2.bottom)) {
+                gameOver();
+            }
 
-            // Bana baserat på distans
-            const gc = document.getElementById('game-container');
-            gc.className = '';
-            if(totalDist > 5000) gc.classList.add('neon');
-            else if(totalDist > 2000) gc.classList.add('desert');
-
-            document.querySelectorAll('.enemy, .police').forEach(e => e.remove());
-            
-            spawnTraffic();
-            lightLogic();
-        }
-
-        function spawnTraffic() {
-            if(!gameActive) return;
-            createCar(false);
-            if(Math.random() > 0.8) createCar(true); // 20% chans för polis
-            setTimeout(spawnTraffic, 1500 - Math.min(score, 1000));
-        }
-
-        function createCar(isPolice) {
-            const c = document.createElement('div');
-            c.className = isPolice ? 'car-sprite police' : 'car-sprite enemy';
-            c.style.backgroundImage = isPolice ? policeSVG : carSVG;
-            if(!isPolice) c.style.filter = `hue-rotate(${Math.random()*360}deg)`;
-            
-            c.style.left = Math.random() * 320 + 20 + 'px';
-            c.style.top = '-100px';
-            c.style.transform = 'rotate(180deg)';
-            document.getElementById('game-container').appendChild(c);
-
-            let y = -100;
-            let move = setInterval(() => {
-                if(!gameActive) { clearInterval(move); c.remove(); return; }
-                
-                let speed = (isPolice ? 12 : 7) + (score/500);
-                if(nitro) speed += 5;
-                y += speed;
-                c.style.top = y + 'px';
-
-                // Kollision
-                let pr = document.getElementById('player').getBoundingClientRect();
-                let cr = c.getBoundingClientRect();
-                if(!(pr.top > cr.bottom || pr.bottom < cr.top || pr.left > cr.right || pr.right < cr.left)) {
-                    gameOver(isPolice);
-                }
-
-                if(y > 800) { 
-                    clearInterval(move); c.remove(); 
-                    score += 100; 
-                    document.getElementById('h-dist').innerText = score;
-                }
-            }, 20);
-        }
-
-        function lightLogic() {
-            if(!gameActive) return;
-            const tl = document.getElementById('traffic-light');
-            const line = document.getElementById('stop-line');
-            
-            setTimeout(() => {
-                if(!gameActive) return;
-                tl.style.top = "100px";
-                line.style.top = "200px";
-                
-                setLight('green');
-                setTimeout(() => setLight('yellow'), 3000);
-                setTimeout(() => setLight('red'), 5000);
-                
-                setTimeout(() => {
-                    tl.style.top = "-300px";
-                    line.style.top = "-150px";
-                    setLight('green');
-                    lightLogic();
-                }, 8000);
-            }, 10000);
-        }
-
-        function setLight(color) {
-            currentLight = color;
-            document.getElementById('light-r').className = 'light' + (color==='red'?' red':'');
-            document.getElementById('light-y').className = 'light' + (color==='yellow'?' yellow':'');
-            document.getElementById('light-g').className = 'light' + (color==='green'?' green':'');
-            document.getElementById('h-light').innerText = color === 'red' ? 'STOPP!' : 'KÖR';
-            document.getElementById('h-light').style.color = color;
-        }
-
-        function gameOver(byPolice) {
-            gameActive = false;
-            let fine = byPolice ? 1000 : 0;
-            let earned = Math.floor(score / 10) - fine;
-            cash += Math.max(0, earned);
-            totalDist += score;
-            
-            localStorage.setItem('carCash', cash);
-            localStorage.setItem('carDist', totalDist);
-
-            document.getElementById('game-over').style.display = 'flex';
-            document.getElementById('stats-final').innerText = byPolice ? 
-                `POLISEN TOG DIG! Böter: 1000kr. Du körde ${score}m.` : 
-                `Du krockade! Du körde ${score}m och tjänade ${earned}kr.`;
-        }
-
-        document.addEventListener('keydown', (e) => {
-            if(!gameActive) return;
-            if(e.key === 'ArrowLeft' && playerX > 30) playerX -= 60;
-            if(e.key === 'ArrowRight' && playerX < 310) playerX += 60;
-            if(e.code === 'Space') nitro = true;
-            document.getElementById('player').style.left = playerX + 'px';
-            
-            // Kolla rödlykte-förseelse
-            if(currentLight === 'red' && score > 0) {
-                // Om man rör sig under rött ljus kan man trigga en extra polis
-                if(Math.random() > 0.5) createCar(true);
+            if(en.y > window.innerHeight) {
+                en.el.remove();
+                enemies.splice(i, 1);
             }
         });
-        document.addEventListener('keyup', (e) => { if(e.code === 'Space') nitro = false; });
-    </script>
+
+        // Hantera objekt (Olja/Boost)
+        obstacles.forEach((ob, i) => {
+            ob.y += speed;
+            ob.el.style.top = ob.y + "px";
+
+            let rect1 = player.getBoundingClientRect();
+            let rect2 = ob.el.getBoundingClientRect();
+            if(!(rect1.right < rect2.left || rect1.left > rect2.right || rect1.bottom < rect2.top || rect1.top > rect2.bottom)) {
+                if(ob.el.dataset.type === "oil") {
+                    oilEffect = 30 * (Math.random() > 0.5 ? 1 : -1);
+                    setTimeout(() => oilEffect = 0, 2000);
+                } else {
+                    speed += 2;
+                    setTimeout(() => speed -= 2, 3000);
+                }
+                ob.el.remove();
+                obstacles.splice(i, 1);
+            }
+        });
+
+        requestAnimationFrame(update);
+    }
+
+    function gameOver() {
+        gameActive = false;
+        alert("CRASH! Din distans: " + Math.floor(distance) + " km");
+        saveScore();
+        location.reload();
+    }
+
+    function saveScore() {
+        let lb = JSON.parse(localStorage.getItem('racing_lb') || "[]");
+        lb.push({n: playerName, d: Math.floor(distance)});
+        lb.sort((a,b) => b.d - a.d);
+        localStorage.setItem('racing_lb', JSON.stringify(lb.slice(0,5)));
+    }
+
+    function updateLB() {
+        let lb = JSON.parse(localStorage.getItem('racing_lb') || "[]");
+        document.getElementById('lb-list').innerHTML = lb.map(x => `<div>${x.n}: ${x.d}km</div>`).join('');
+    }
+
+    setInterval(spawnEnemy, 1500);
+    setInterval(spawnObstacle, 4000);
+    
+    update();
+    updateLB();
+    handlePlayerName(); // Använd samma namn som i Shawarma Simulator
+</script>
 </body>
 </html>
