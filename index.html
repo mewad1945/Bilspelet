@@ -2,82 +2,69 @@
 <html lang="sv">
 <head>
     <meta charset="UTF-8">
-    <title>Super Car Dodge 6.0 - Traffic Lights & Records</title>
+    <title>Super Racer 7.0 - POLICE CHASE</title>
     <style>
         :root { --road: #333; --grass: #2d5a27; --line: #fff; }
-        body { margin: 0; background: #1a1a1a; display: flex; justify-content: center; align-items: center; height: 100vh; color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
+        body { margin: 0; background: #1a1a1a; display: flex; justify-content: center; align-items: center; height: 100vh; color: white; font-family: sans-serif; overflow: hidden; }
         
         #game-container { position: relative; width: 400px; height: 750px; background: var(--road); border-left: 20px solid var(--grass); border-right: 20px solid var(--grass); overflow: hidden; display: none; }
         .lane-line { position: absolute; left: 50%; width: 6px; height: 80px; background: var(--line); transform: translateX(-50%); animation: moveRoad 0.6s linear infinite; }
-        
-        /* Ban-teman */
-        .desert { --grass: #edc9af !important; --road: #d2b48c !important; }
-        .neon { --grass: #000 !important; --road: #1a1a2e !important; --line: #0ff !important; box-shadow: 0 0 40px #0ff; }
-
         @keyframes moveRoad { 0% { top: -100px; } 100% { top: 750px; } }
 
-        /* Trafikljus */
-        #traffic-light { position: absolute; right: 30px; top: -200px; width: 40px; height: 100px; background: #222; border-radius: 5px; border: 2px solid #555; z-index: 60; display: flex; flex-direction: column; align-items: center; justify-content: space-around; padding: 5px 0; }
-        .light { width: 25px; height: 25px; border-radius: 50%; background: #444; opacity: 0.3; }
-        .active-red { background: #ff0000 !important; opacity: 1 !important; box-shadow: 0 0 15px #ff0000; }
-        .active-yellow { background: #ffaa00 !important; opacity: 1 !important; box-shadow: 0 0 15px #ffaa00; }
-        .active-green { background: #00ff00 !important; opacity: 1 !important; box-shadow: 0 0 15px #00ff00; }
-        #stop-line { position: absolute; width: 100%; height: 10px; background: rgba(255,255,255,0.5); top: -50px; z-index: 55; }
+        /* Banor */
+        .desert { --grass: #edc9af !important; --road: #d2b48c !important; }
+        .neon { --grass: #000 !important; --road: #111 !important; --line: #0ff !important; box-shadow: 0 0 50px #0ff; }
 
-        .car-sprite { position: absolute; width: 50px; height: 90px; z-index: 10; background-size: contain; background-repeat: no-repeat; transition: left 0.1s; }
-        .oil { position: absolute; width: 70px; height: 40px; background: rgba(0,0,0,0.8); border-radius: 50%; z-index: 5; filter: blur(3px); }
+        .car-sprite { position: absolute; width: 50px; height: 90px; z-index: 10; background-size: contain; background-repeat: no-repeat; }
+        .police { animation: siren 0.2s infinite alternate; border-radius: 5px; }
+        @keyframes siren { 0% { box-shadow: 0 0 20px blue; } 100% { box-shadow: 0 0 20px red; } }
+
+        /* Trafikljus */
+        #traffic-light { position: absolute; right: 30px; top: -300px; width: 40px; height: 100px; background: #222; border-radius: 5px; z-index: 60; display: flex; flex-direction: column; align-items: center; justify-content: space-around; padding: 5px 0; border: 2px solid #555; transition: top 0.5s; }
+        .light { width: 25px; height: 25px; border-radius: 50%; background: #444; }
+        .red { background: #ff0000 !important; box-shadow: 0 0 15px red; }
+        .yellow { background: #ffaa00 !important; box-shadow: 0 0 15px orange; }
+        .green { background: #00ff00 !important; box-shadow: 0 0 15px green; }
+        #stop-line { position: absolute; width: 100%; height: 8px; background: rgba(255,255,255,0.4); top: -150px; }
 
         .overlay { position: absolute; width: 400px; height: 750px; background: rgba(0,0,0,0.9); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; text-align: center; }
-        .btn { padding: 12px; width: 220px; margin: 5px; cursor: pointer; background: #e74c3c; color: white; border: none; border-radius: 5px; font-weight: bold; }
+        .btn { padding: 20px; width: 250px; margin: 10px; cursor: pointer; background: #e74c3c; color: white; border: none; border-radius: 10px; font-weight: bold; font-size: 18px; }
+        .btn:hover { background: #c0392b; transform: scale(1.05); }
         
-        #hud { position: absolute; top: 15px; left: 15px; z-index: 50; background: rgba(0,0,0,0.8); padding: 12px; border-radius: 8px; border: 1px solid #444; font-size: 14px; }
-        .leaderboard { margin-top: 15px; font-size: 14px; color: #4ecdc4; text-align: left; }
+        #hud { position: absolute; top: 20px; left: 20px; z-index: 50; background: rgba(0,0,0,0.8); padding: 15px; border-radius: 10px; border: 1px solid #444; font-family: monospace; }
     </style>
 </head>
 <body>
 
-    <!-- MENY -->
     <div id="menu" class="overlay">
-        <h1 style="color:#e74c3c; margin-bottom: 5px;">SUPER RACER 6.0</h1>
-        <div id="status-info" style="color:#f1c40f; margin-bottom: 15px;">
-            💰 Cash: <span id="cash-ui">0</span> kr<br>
-            🛣️ Total distans: <span id="total-dist-ui">0</span> km
+        <h1 style="color:#e74c3c; font-size: 40px; margin-bottom: 5px;">SUPER RACER 7.0</h1>
+        <div style="color:#f1c40f; margin-bottom: 20px;">
+            💰 CASH: <span id="m-cash">0</span> kr | 🛣️ KM: <span id="m-dist">0</span>
         </div>
-        
-        <div id="garage" style="background:#2c3e50; padding:15px; border-radius:10px;">
-            <button class="btn" style="background:#27ae60" onclick="startGame()">STARTA RACET!</button><br>
-            <button class="btn" style="background:#2980b9" onclick="alert('Fler bilar kommer snart!')">BUTIK</button>
-        </div>
-
-        <div class="leaderboard">
-            <strong>🏆 TOPP 5 REKORD (METER):</strong>
-            <div id="leaderboard-list">Inga rekord än...</div>
-        </div>
+        <button class="btn" onclick="startGame()">STARTA SPELET</button>
+        <p style="color:#888;">Undvik polisen & trafikljusen!</p>
     </div>
 
-    <!-- GAME OVER -->
     <div id="game-over" class="overlay" style="display:none;">
-        <h1 id="crash-title" style="color:#e74c3c">CRASH!</h1>
-        <p id="race-stats" style="font-size: 20px;"></p>
+        <h1 style="color:#e74c3c">BUSTED / CRASHED</h1>
+        <p id="stats-final"></p>
         <button class="btn" onclick="startGame()">FÖRSÖK IGEN</button>
-        <button class="btn" style="background:#555" onclick="location.reload()">MENY</button>
+        <button class="btn" style="background:#555" onclick="location.reload()">GARAGE</button>
     </div>
 
-    <!-- HUD -->
     <div id="hud">
-        📏 Distans: <span id="dist-val">0</span> m<br>
-        💰 Cash: <span id="cash-val">0</span> kr<br>
-        🚦 Status: <span id="light-status">KÖR!</span>
+        🏁 DISTANS: <span id="h-dist">0</span>m<br>
+        💰 CASH: <span id="h-cash">0</span>kr<br>
+        🚦 LJUS: <span id="h-light" style="font-weight:bold">KÖR</span>
     </div>
 
     <div id="game-container">
         <div id="traffic-light">
-            <div id="l-red" class="light"></div>
-            <div id="l-yellow" class="light"></div>
-            <div id="l-green" class="light"></div>
+            <div id="light-r" class="light"></div>
+            <div id="light-y" class="light"></div>
+            <div id="light-g" class="light"></div>
         </div>
         <div id="stop-line"></div>
-
         <div class="lane-line" style="top:0"></div>
         <div class="lane-line" style="top:250px"></div>
         <div class="lane-line" style="top:500px"></div>
@@ -85,153 +72,147 @@
     </div>
 
     <script>
-        const carAssets =;
+        const carSVG = "url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MCIgaGVpZ2h0PSI5MCI+PHJlY3QgeD0iNSIgeT0iNSIgd2lkdGg9IjQwIiBoZWlnaHQ9IjgwIiByeD0iMTAiIGZpbGw9IiMzNDk4ZGIiLz48L3N2Zz4=')";
+        const policeSVG = "url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MCIgaGVpZ2h0PSI5MCI+PHJlY3QgeD0iNSIgeT0iNSIgd2lkdGg9IjQwIiBoZWlnaHQ9IjgwIiByeD0iMTAiIGZpbGw9IiMwMDAiLz48cmVjdCB4PSIxMCIgeT0iNSIgd2lkdGg9IjMwIiBoZWlnaHQ9IjUiIGZpbGw9ImJsdWUiLz48L3N2Zz4=')";
 
-        let totalDist = parseInt(localStorage.getItem('carDist')) || 0;
         let cash = parseInt(localStorage.getItem('carCash')) || 0;
-        let highscores = JSON.parse(localStorage.getItem('highscores')) || [];
-
+        let totalDist = parseInt(localStorage.getItem('carDist')) || 0;
         let gameActive = false;
-        let raceDist = 0;
+        let score = 0;
         let playerX = 175;
         let nitro = false;
-        let currentLight = 'green'; // red, yellow, green
-        let lightInterval;
+        let currentLight = 'green';
 
-        function updateMenu() {
-            document.getElementById('total-dist-ui').innerText = (totalDist / 1000).toFixed(1);
-            document.getElementById('cash-ui').innerText = cash;
-            
-            const list = document.getElementById('leaderboard-list');
-            list.innerHTML = highscores.map((s, i) => `${i+1}. ${s} m`).join('<br>');
-        }
+        document.getElementById('m-cash').innerText = cash;
+        document.getElementById('m-dist').innerText = (totalDist/1000).toFixed(1);
 
         function startGame() {
-            gameActive = true; raceDist = 0; playerX = 175;
+            gameActive = true; score = 0; playerX = 175;
             document.getElementById('menu').style.display = 'none';
             document.getElementById('game-over').style.display = 'none';
             document.getElementById('game-container').style.display = 'block';
-            document.getElementById('player').style.backgroundImage = carAssets[0];
-            document.getElementById('player').style.left = playerX + 'px';
             
+            const p = document.getElementById('player');
+            p.style.backgroundImage = carSVG;
+            p.style.left = playerX + 'px';
+            p.style.bottom = "30px";
+
+            // Bana baserat på distans
             const gc = document.getElementById('game-container');
             gc.className = '';
-            if(totalDist >= 5000) gc.classList.add('neon');
-            else if(totalDist >= 2000) gc.classList.add('desert');
+            if(totalDist > 5000) gc.classList.add('neon');
+            else if(totalDist > 2000) gc.classList.add('desert');
 
-            document.querySelectorAll('.enemy, .oil').forEach(e => e.remove());
+            document.querySelectorAll('.enemy, .police').forEach(e => e.remove());
             
-            clearInterval(lightInterval);
-            lightInterval = setInterval(manageTraffic, 8000); // Nytt ljus var 8:e sekund
-            spawnLoop();
+            spawnTraffic();
+            lightLogic();
         }
 
-        function manageTraffic() {
+        function spawnTraffic() {
+            if(!gameActive) return;
+            createCar(false);
+            if(Math.random() > 0.8) createCar(true); // 20% chans för polis
+            setTimeout(spawnTraffic, 1500 - Math.min(score, 1000));
+        }
+
+        function createCar(isPolice) {
+            const c = document.createElement('div');
+            c.className = isPolice ? 'car-sprite police' : 'car-sprite enemy';
+            c.style.backgroundImage = isPolice ? policeSVG : carSVG;
+            if(!isPolice) c.style.filter = `hue-rotate(${Math.random()*360}deg)`;
+            
+            c.style.left = Math.random() * 320 + 20 + 'px';
+            c.style.top = '-100px';
+            c.style.transform = 'rotate(180deg)';
+            document.getElementById('game-container').appendChild(c);
+
+            let y = -100;
+            let move = setInterval(() => {
+                if(!gameActive) { clearInterval(move); c.remove(); return; }
+                
+                let speed = (isPolice ? 12 : 7) + (score/500);
+                if(nitro) speed += 5;
+                y += speed;
+                c.style.top = y + 'px';
+
+                // Kollision
+                let pr = document.getElementById('player').getBoundingClientRect();
+                let cr = c.getBoundingClientRect();
+                if(!(pr.top > cr.bottom || pr.bottom < cr.top || pr.left > cr.right || pr.right < cr.left)) {
+                    gameOver(isPolice);
+                }
+
+                if(y > 800) { 
+                    clearInterval(move); c.remove(); 
+                    score += 100; 
+                    document.getElementById('h-dist').innerText = score;
+                }
+            }, 20);
+        }
+
+        function lightLogic() {
             if(!gameActive) return;
             const tl = document.getElementById('traffic-light');
             const line = document.getElementById('stop-line');
-            let y = -200;
-            tl.style.top = y + 'px';
-            line.style.top = y + 120 + 'px';
-
-            // Starta sekvens: Grön -> Gul -> Röd
-            setLight('green');
             
-            let moveLight = setInterval(() => {
-                y += nitro ? 16 : 8;
-                tl.style.top = y + 'px';
-                line.style.top = y + 120 + 'px';
-
-                if(y > 200 && currentLight === 'green') setLight('yellow');
-                if(y > 300 && currentLight === 'yellow') setLight('red');
-
-                // Kolla tjuvstart/mot rött
-                let pRect = document.getElementById('player').getBoundingClientRect();
-                let lRect = line.getBoundingClientRect();
-                if(currentLight === 'red' && pRect.top < lRect.bottom && pRect.bottom > lRect.top) {
-                    cash -= 500;
-                    document.getElementById('light-status').innerText = "BÖTER! -500kr";
-                }
-
-                if(y > 800) { clearInterval(moveLight); setLight('green'); }
-            }, 20);
+            setTimeout(() => {
+                if(!gameActive) return;
+                tl.style.top = "100px";
+                line.style.top = "200px";
+                
+                setLight('green');
+                setTimeout(() => setLight('yellow'), 3000);
+                setTimeout(() => setLight('red'), 5000);
+                
+                setTimeout(() => {
+                    tl.style.top = "-300px";
+                    line.style.top = "-150px";
+                    setLight('green');
+                    lightLogic();
+                }, 8000);
+            }, 10000);
         }
 
         function setLight(color) {
             currentLight = color;
-            document.getElementById('l-red').className = 'light' + (color === 'red' ? ' active-red' : '');
-            document.getElementById('l-yellow').className = 'light' + (color === 'yellow' ? ' active-yellow' : '');
-            document.getElementById('l-green').className = 'light' + (color === 'green' ? ' active-green' : '');
-            document.getElementById('light-status').innerText = color === 'red' ? "STOPP!" : "KÖR!";
+            document.getElementById('light-r').className = 'light' + (color==='red'?' red':'');
+            document.getElementById('light-y').className = 'light' + (color==='yellow'?' yellow':'');
+            document.getElementById('light-g').className = 'light' + (color==='green'?' green':'');
+            document.getElementById('h-light').innerText = color === 'red' ? 'STOPP!' : 'KÖR';
+            document.getElementById('h-light').style.color = color;
         }
 
-        function spawnLoop() {
-            if(!gameActive) return;
-            createEnemy();
-            setTimeout(spawnLoop, 1500 / (1 + raceDist/1000));
-        }
-
-        function createEnemy() {
-            const e = document.createElement('div');
-            e.className = 'car-sprite enemy';
-            e.style.backgroundImage = carAssets[0];
-            e.style.left = Math.random() * 320 + 10 + 'px';
-            e.style.top = '-100px';
-            e.style.transform = 'rotate(180deg)';
-            e.style.filter = 'hue-rotate('+Math.random()*360+'deg)';
-            document.getElementById('game-container').appendChild(e);
-
-            let y = -100;
-            let move = setInterval(() => {
-                if(!gameActive) { clearInterval(move); e.remove(); return; }
-                y += nitro ? 18 : 8;
-                e.style.top = y + 'px';
-
-                let p = document.getElementById('player').getBoundingClientRect();
-                let er = e.getBoundingClientRect();
-                if(!(p.top > er.bottom || p.bottom < er.top || p.left > er.right || p.right < er.left)) {
-                    endGame();
-                }
-
-                if(y > 800) { 
-                    clearInterval(move); e.remove(); 
-                    raceDist += 100;
-                    document.getElementById('dist-val').innerText = raceDist;
-                    document.getElementById('cash-val').innerText = cash + Math.floor(raceDist/10);
-                }
-            }, 20);
-        }
-
-        function endGame() {
+        function gameOver(byPolice) {
             gameActive = false;
-            let earned = Math.floor(raceDist / 10);
-            cash += earned;
-            totalDist += raceDist;
-            
-            // Uppdatera highscore
-            highscores.push(raceDist);
-            highscores.sort((a, b) => b - a);
-            highscores = highscores.slice(0, 5);
+            let fine = byPolice ? 1000 : 0;
+            let earned = Math.floor(score / 10) - fine;
+            cash += Math.max(0, earned);
+            totalDist += score;
             
             localStorage.setItem('carCash', cash);
             localStorage.setItem('carDist', totalDist);
-            localStorage.setItem('highscores', JSON.stringify(highscores));
 
             document.getElementById('game-over').style.display = 'flex';
-            document.getElementById('race-stats').innerText = `Du körde ${raceDist} meter och tjänade ${earned} kr.`;
-            updateMenu();
+            document.getElementById('stats-final').innerText = byPolice ? 
+                `POLISEN TOG DIG! Böter: 1000kr. Du körde ${score}m.` : 
+                `Du krockade! Du körde ${score}m och tjänade ${earned}kr.`;
         }
 
         document.addEventListener('keydown', (e) => {
             if(!gameActive) return;
-            if(e.key === 'ArrowLeft' && playerX > 20) playerX -= 60;
-            if(e.key === 'ArrowRight' && playerX < 320) playerX += 60;
+            if(e.key === 'ArrowLeft' && playerX > 30) playerX -= 60;
+            if(e.key === 'ArrowRight' && playerX < 310) playerX += 60;
             if(e.code === 'Space') nitro = true;
             document.getElementById('player').style.left = playerX + 'px';
+            
+            // Kolla rödlykte-förseelse
+            if(currentLight === 'red' && score > 0) {
+                // Om man rör sig under rött ljus kan man trigga en extra polis
+                if(Math.random() > 0.5) createCar(true);
+            }
         });
         document.addEventListener('keyup', (e) => { if(e.code === 'Space') nitro = false; });
-
-        updateMenu();
     </script>
 </body>
 </html>
