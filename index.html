@@ -2,282 +2,380 @@
 <html lang="sv">
 <head>
     <meta charset="UTF-8">
-    <title>Retro Racer - Top Down</title>
+    <title>Retro Racer - JS Edition</title>
     <style>
-        body { margin: 0; background: #333; font-family: 'Courier New', Courier, monospace; color: white; overflow: hidden; }
-        #game-container { position: relative; width: 400px; height: 600px; margin: 20px auto; background: #555; border: 4px solid #fff; overflow: hidden; }
-        #road { position: absolute; width: 100%; height: 100%; background: #444; }
-        .line { position: absolute; width: 10px; height: 50px; background: white; left: 195px; }
-        
-        /* UI Menyer */
-        .menu-overlay { position: absolute; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; }
-        button { padding: 10px 20px; margin: 10px; cursor: pointer; background: #f1c40f; border: none; font-weight: bold; width: 200px; }
-        button:hover { background: #d4ac0d; }
-        
-        .car { position: absolute; border-radius: 2px; }
-        .player { background: #e74c3c; width: 40px; height: 60px; z-index: 5; }
-        .enemy { width: 40px; height: 60px; }
-        .oil { position: absolute; width: 50px; height: 30px; background: rgba(0,0,0,0.6); border-radius: 50%; }
-        
-        #stats { position: absolute; top: 10px; left: 10px; z-index: 6; }
-        .hidden { display: none !important; }
-        
-        /* Nitro effekt */
-        .nitro-active { box-shadow: 0 0 20px #3498db; border: 2px solid #3498db; }
-        #traffic-light { position: absolute; top: 20px; right: 20px; width: 30px; height: 80px; background: #111; border-radius: 5px; display: flex; flex-direction: column; align-items: center; justify-content: space-around; padding: 5px; }
-        .light { width: 20px; height: 20px; border-radius: 50%; background: #333; }
+        body { margin: 0; background: #222; font-family: 'Courier New', Courier, monospace; overflow: hidden; color: white; }
+        #game-container { position: relative; width: 400px; height: 600px; margin: 20px auto; background: #444; border: 4px solid #fff; display: none; }
+        #ui-layer { position: absolute; top: 10px; left: 10px; z-index: 10; pointer-events: none; }
+        #menu, #garage, #tracks { width: 400px; margin: 50px auto; text-align: center; background: #333; padding: 20px; border: 4px solid #fff; }
+        .btn { background: #fff; color: #000; border: none; padding: 10px 20px; margin: 10px; cursor: pointer; font-weight: bold; width: 200px; }
+        .btn:hover { background: #ccc; }
+        canvas { display: block; background: #333; }
+        .hidden { display: none; }
+        .stat-box { margin-bottom: 10px; }
+        #nitro-bar { width: 100px; height: 10px; background: #555; border: 1px solid #fff; }
+        #nitro-fill { height: 100%; background: cyan; width: 0%; transition: width 0.3s; }
+        #traffic-light { width: 30px; height: 80px; background: #111; position: absolute; right: 10px; top: 10px; border: 2px solid #555; display: flex; flex-direction: column; align-items: center; justify-content: space-around; padding: 5px; }
+        .light { width: 20px; height: 20px; border-radius: 50%; background: #222; }
+        .red { background: #ff0000; box-shadow: 0 0 10px #ff0000; }
+        .yellow { background: #ffaa00; box-shadow: 0 0 10px #ffaa00; }
+        .green { background: #00ff00; box-shadow: 0 0 10px #00ff00; }
     </style>
 </head>
 <body>
 
-<div id="game-container">
-    <div id="stats">Pengar: <span id="money">0</span>kr | Km: <span id="dist">0</span></div>
-    
-    <div id="traffic-light">
-        <div id="light-red" class="light"></div>
-        <div id="light-yellow" class="light"></div>
-        <div id="light-green" class="light"></div>
-    </div>
-
-    <div id="main-menu" class="menu-overlay">
+    <div id="menu">
         <h1>RETRO RACER</h1>
-        <button onclick="startGame()">STARTA RACE</button>
-        <button onclick="showGarage()">GARAGE</button>
-        <button onclick="showTracks()">BYT TRACK</button>
+        <div class="stat-box">Pengar: <span id="menu-money">0</span> kr</div>
+        <div class="stat-box">Total Distans: <span id="total-dist">0</span> km</div>
+        <button class="btn" onclick="startGame()">STARTA RACE</button><br>
+        <button class="btn" onclick="showGarage()">GARAGE</button><br>
+        <button class="btn" onclick="showTracks()">BYT TRACK</button>
     </div>
 
-    <div id="garage-menu" class="menu-overlay hidden">
+    <div id="garage" class="hidden">
         <h2>GARAGE</h2>
-        <div id="car-list"></div>
-        <button onclick="hideMenus()">TILLBAKA</button>
+        <div id="garage-list"></div>
+        <button class="btn" onclick="showMenu()">TILLBAKA</button>
     </div>
 
-    <div id="track-menu" class="menu-overlay hidden">
+    <div id="tracks" class="hidden">
         <h2>VÄLJ BANA</h2>
         <div id="track-list"></div>
-        <button onclick="hideMenus()">TILLBAKA</button>
+        <button class="btn" onclick="showMenu()">TILLBAKA</button>
     </div>
 
-    <div id="road"></div>
-    <div id="player" class="car player"></div>
-</div>
+    <div id="game-container">
+        <div id="ui-layer">
+            <div>Pengar: <span id="ui-money">0</span> kr</div>
+            <div>Hastighet: <span id="ui-speed">0</span> km/h</div>
+            <div>Distans: <span id="ui-dist">0</span> m</div>
+            <div>Nitro: <div id="nitro-bar"><div id="nitro-fill"></div></div></div>
+        </div>
+        <div id="traffic-light">
+            <div id="light-red" class="light"></div>
+            <div id="light-yellow" class="light"></div>
+            <div id="light-green" class="light"></div>
+        </div>
+        <canvas id="gameCanvas" width="400" height="600"></canvas>
+    </div>
 
 <script>
-// --- KONFIGURATION & STATE ---
-let state = {
+/** * SPELDATA & KONFIGURATION
+ */
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+let gameState = {
     money: parseInt(localStorage.getItem('money')) || 0,
     totalDist: parseInt(localStorage.getItem('totalDist')) || 0,
-    ownedCars: JSON.parse(localStorage.getItem('ownedCars')) || [0],
-    currentCar: 0,
-    currentTrack: 0,
-    gameActive: false,
-    speed: 5,
-    distance: 0,
-    nitroAvailable: true,
-    isNitro: false,
-    isStunned: false
+    currentCar: JSON.parse(localStorage.getItem('currentCar')) || { color: 'red', speed: 5 },
+    ownedCars: JSON.parse(localStorage.getItem('ownedCars')) || [{ color: 'red', speed: 5, price: 0 }],
+    currentTrack: JSON.parse(localStorage.getItem('currentTrack')) || { name: 'Asfalt', color: '#444', unlockAt: 0 }
 };
 
+const carsForSale = [
+    { color: 'red', speed: 5, price: 0 },
+    { color: 'blue', speed: 6, price: 500 },
+    { color: 'green', speed: 7, price: 1500 },
+    { color: 'yellow', speed: 8, price: 3000 },
+    { color: 'purple', speed: 10, price: 5000 }
+];
+
 const tracks = [
-    { name: "City", color: "#444", req: 0 },
-    { name: "Forest", color: "#2d5a27", req: 1000 },
-    { name: "Desert", color: "#d4a373", req: 5000 },
-    { name: "Snow", color: "#fff", req: 10000 },
-    { name: "Night", color: "#1a1a1a", req: 20000 }
+    { name: 'Staden', color: '#444', line: '#fff', unlockAt: 0 },
+    { name: 'Öknen', color: '#d2b48c', line: '#fff', unlockAt: 1000 },
+    { name: 'Skogen', color: '#228b22', line: '#fff', unlockAt: 5000 },
+    { name: 'Isbanan', color: '#add8e6', line: '#fff', unlockAt: 10000 },
+    { name: 'Vulkanen', color: '#111', line: '#ff4500', unlockAt: 25000 }
 ];
 
-const carModels = [
-    { name: "Volvo 240", color: "#e74c3c", price: 0 },
-    { name: "Sport", color: "#3498db", price: 500 },
-    { name: "Truck", color: "#f1c40f", price: 1500 },
-    { name: "Super", color: "#9b59b6", price: 5000 },
-    { name: "Batman", color: "#222", price: 10000 }
-];
+// Spel-variabler
+let playerX = 180;
+let enemies = [];
+let oilPatches = [];
+let gameActive = false;
+let score = 0;
+let speedMult = 1;
+let distance = 0;
+let nitroCharge = 0;
+let nitroActive = false;
+let nitroTimer = 0;
+let oilEffect = 0;
+let trafficLightState = 'green'; // green, yellow, red
+let trafficTimer = 0;
+let policeMode = false;
 
-const enemyColors = ["#1abc9c", "#2ecc71", "#e67e22", "#95a5a6", "#34495e"];
-
-// --- DOM ELEMENT ---
-const road = document.getElementById('road');
-const player = document.getElementById('player');
-const moneyEl = document.getElementById('money');
-const distEl = document.getElementById('dist');
-
-// --- KONTROLLER ---
+// Input handling
 let keys = {};
-document.addEventListener('keydown', e => {
-    keys[e.code] = true;
-    if(e.code === 'Space' && state.nitroAvailable && state.gameActive) activateNitro();
-});
-document.addEventListener('keyup', e => keys[e.code] = false);
+window.addEventListener('keydown', e => keys[e.code] = true);
+window.addEventListener('keyup', e => keys[e.code] = false);
 
-// --- SPEL-LOGIK ---
-function startGame() {
-    hideMenus();
-    state.gameActive = true;
-    state.speed = 5;
-    state.distance = 0;
-    resetPlayer();
-    gameLoop();
-    startTraficLightCycle();
-}
+/**
+ * CORE LOGIK
+ */
 
-function resetPlayer() {
-    player.style.left = "180px";
-    player.style.top = "500px";
-    player.style.backgroundColor = carModels[state.currentCar].color;
-    road.style.backgroundColor = tracks[state.currentTrack].color;
-}
-
-function spawnEnemy() {
-    if(!state.gameActive) return;
-    const enemy = document.createElement('div');
-    enemy.className = 'car enemy';
-    enemy.style.backgroundColor = enemyColors[Math.floor(Math.random() * 5)];
-    enemy.style.left = Math.random() * (400 - 40) + "px";
-    enemy.style.top = "-100px";
-    road.appendChild(enemy);
-    
-    // Flytta bil
-    let moveInterval = setInterval(() => {
-        if(!state.gameActive) { clearInterval(moveInterval); enemy.remove(); return; }
-        let top = parseInt(enemy.style.top);
-        enemy.style.top = (top + state.speed) + "px";
-
-        // Kolla kollision
-        if (isColliding(player, enemy)) gameOver();
-
-        // Passera bil - tjäna pengar
-        if (top > 600) {
-            state.money += 10;
-            updateUI();
-            clearInterval(moveInterval);
-            enemy.remove();
-        }
-    }, 1000/60);
-
-    setTimeout(spawnEnemy, Math.random() * 2000 + 500);
-}
-
-function spawnOil() {
-    if(!state.gameActive) return;
-    const oil = document.createElement('div');
-    oil.className = 'oil';
-    oil.style.left = Math.random() * (400 - 50) + "px";
-    oil.style.top = "-50px";
-    road.appendChild(oil);
-
-    let moveInterval = setInterval(() => {
-        if(!state.gameActive) { clearInterval(moveInterval); oil.remove(); return; }
-        let top = parseInt(oil.style.top);
-        oil.style.top = (top + state.speed) + "px";
-
-        if(isColliding(player, oil) && !state.isStunned) {
-            applyOilEffect();
-        }
-
-        if(top > 600) { clearInterval(moveInterval); oil.remove(); }
-    }, 1000/60);
-
-    setTimeout(spawnOil, 5000);
-}
-
-function applyOilEffect() {
-    state.isStunned = true;
-    player.style.transform = "rotate(20deg)";
-    setTimeout(() => {
-        state.isStunned = false;
-        player.style.transform = "rotate(0deg)";
-    }, 1000);
-}
-
-function activateNitro() {
-    state.nitroAvailable = false;
-    state.isNitro = true;
-    state.speed *= 2;
-    player.classList.add('nitro-active');
-    
-    setTimeout(() => {
-        state.speed /= 2;
-        state.isNitro = false;
-        player.classList.remove('nitro-active');
-    }, 4000);
-
-    setTimeout(() => { state.nitroAvailable = true; }, 10000);
-}
-
-function gameLoop() {
-    if(!state.gameActive) return;
-
-    // Rörelse
-    let left = parseInt(player.style.left);
-    if(!state.isStunned) {
-        if(keys['ArrowLeft'] && left > 0) player.style.left = (left - 5) + "px";
-        if(keys['ArrowRight'] && left < 360) player.style.left = (left + 5) + "px";
-    }
-
-    // Öka svårighetsgrad
-    state.distance += 0.5;
-    if(Math.floor(state.distance) % 50 === 0) state.speed += 0.01;
-
-    updateUI();
-    requestAnimationFrame(gameLoop);
-}
-
-// --- HJÄLPFUNKTIONER ---
-function isColliding(a, b) {
-    let aRect = a.getBoundingClientRect();
-    let bRect = b.getBoundingClientRect();
-    return !(aRect.top > bRect.bottom || aRect.bottom < bRect.top || aRect.right < bRect.left || aRect.left > bRect.right);
+function saveData() {
+    localStorage.setItem('money', gameState.money);
+    localStorage.setItem('totalDist', gameState.totalDist);
+    localStorage.setItem('ownedCars', JSON.stringify(gameState.ownedCars));
+    localStorage.setItem('currentCar', JSON.stringify(gameState.currentCar));
+    localStorage.setItem('currentTrack', JSON.stringify(gameState.currentTrack));
 }
 
 function updateUI() {
-    moneyEl.innerText = state.money;
-    distEl.innerText = Math.floor(state.distance);
+    document.getElementById('menu-money').innerText = gameState.money;
+    document.getElementById('total-dist').innerText = Math.floor(gameState.totalDist / 1000);
+    document.getElementById('ui-money').innerText = gameState.money;
+}
+
+function showMenu() {
+    document.getElementById('menu').classList.remove('hidden');
+    document.getElementById('garage').classList.add('hidden');
+    document.getElementById('tracks').classList.add('hidden');
+    document.getElementById('game-container').style.display = 'none';
+    updateUI();
+}
+
+function showGarage() {
+    document.getElementById('menu').classList.add('hidden');
+    document.getElementById('garage').classList.remove('hidden');
+    const list = document.getElementById('garage-list');
+    list.innerHTML = '';
+    carsForSale.forEach(car => {
+        const owned = gameState.ownedCars.find(c => c.color === car.color);
+        list.innerHTML += `
+            <div style="border:1px solid #fff; margin:5px; padding:5px;">
+                Färg: ${car.color} | Fart: ${car.speed} <br>
+                ${owned ? 
+                    `<button class="btn" onclick="selectCar('${car.color}')" ${gameState.currentCar.color === car.color ? 'disabled' : ''}>${gameState.currentCar.color === car.color ? 'VALD' : 'VÄLJ'}</button>` : 
+                    `<button class="btn" onclick="buyCar('${car.color}')">KÖP (${car.price}kr)</button>`}
+            </div>`;
+    });
+}
+
+function showTracks() {
+    document.getElementById('menu').classList.add('hidden');
+    document.getElementById('tracks').classList.remove('hidden');
+    const list = document.getElementById('track-list');
+    list.innerHTML = '';
+    tracks.forEach(t => {
+        const locked = (gameState.totalDist / 1000) < t.unlockAt;
+        list.innerHTML += `
+            <div style="border:1px solid #fff; margin:5px; padding:5px;">
+                Bana: ${t.name} (Låses upp vid ${t.unlockAt}km) <br>
+                ${locked ? `LÅST` : `<button class="btn" onclick="selectTrack('${t.name}')">VÄLJ</button>`}
+            </div>`;
+    });
+}
+
+// Köp/Välj funktioner
+window.buyCar = (color) => {
+    const car = carsForSale.find(c => c.color === color);
+    if (gameState.money >= car.price) {
+        gameState.money -= car.price;
+        gameState.ownedCars.push(car);
+        saveData();
+        showGarage();
+    } else { alert("För lite pengar!"); }
+};
+window.selectCar = (color) => {
+    gameState.currentCar = gameState.ownedCars.find(c => c.color === color);
+    saveData();
+    showGarage();
+};
+window.selectTrack = (name) => {
+    gameState.currentTrack = tracks.find(t => t.name === name);
+    saveData();
+    showTracks();
+};
+
+/**
+ * SPEL-LOOP
+ */
+
+function startGame() {
+    document.getElementById('menu').classList.add('hidden');
+    document.getElementById('game-container').style.display = 'block';
+    resetGame();
+    gameActive = true;
+    requestAnimationFrame(gameLoop);
+}
+
+function resetGame() {
+    playerX = 180;
+    enemies = [];
+    oilPatches = [];
+    distance = 0;
+    speedMult = 1;
+    nitroCharge = 0;
+    nitroActive = false;
+    trafficTimer = 0;
+    policeMode = false;
+    updateTrafficLight('green');
+}
+
+function updateTrafficLight(state) {
+    trafficLightState = state;
+    document.getElementById('light-red').className = 'light ' + (state === 'red' ? 'red' : '');
+    document.getElementById('light-yellow').className = 'light ' + (state === 'yellow' ? 'yellow' : '');
+    document.getElementById('light-green').className = 'light ' + (state === 'green' ? 'green' : '');
+}
+
+function spawnEnemy() {
+    const lanes = [80, 180, 280];
+    const colors = ['white', 'orange', 'cyan', 'pink', 'gray'];
+    // Om rött ljus (polis-läge), spawna oftare
+    let spawnChance = policeMode ? 0.05 : 0.02;
+    
+    if (Math.random() < spawnChance) {
+        enemies.push({
+            x: lanes[Math.floor(Math.random() * lanes.length)],
+            y: -100,
+            w: 40,
+            h: 70,
+            color: policeMode ? 'blue' : colors[Math.floor(Math.random() * colors.length)],
+            isPolice: policeMode
+        });
+    }
+}
+
+function spawnOil() {
+    if (Math.random() < 0.005) {
+        oilPatches.push({ x: Math.random() * 300 + 50, y: -50, w: 30, h: 20 });
+    }
+}
+
+function gameLoop() {
+    if (!gameActive) return;
+
+    ctx.fillStyle = gameState.currentTrack.color;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Väglinjer
+    ctx.strokeStyle = gameState.currentTrack.line;
+    ctx.setLineDash([20, 20]);
+    ctx.beginPath();
+    ctx.moveTo(canvas.width / 2, 0);
+    ctx.lineTo(canvas.width / 2, canvas.height);
+    ctx.stroke();
+
+    // Hantera svårighetsgrad (hastighet)
+    speedMult = 1 + Math.floor(distance / 50000) * 0.2;
+    let baseSpeed = (gameState.currentCar.speed * speedMult);
+    let currentMoveSpeed = nitroActive ? baseSpeed * 2 : baseSpeed;
+
+    // Trafikljus cykel
+    trafficTimer++;
+    if (trafficTimer > 2000) { // Var 30-40 sek (ca)
+        if (trafficLightState === 'green') {
+             updateTrafficLight('yellow');
+             trafficTimer = 1800; // Snabb gul
+        } else if (trafficLightState === 'yellow') {
+             updateTrafficLight('red');
+             policeMode = true;
+             trafficTimer = 1400; // Rött i 10 sek (ca 600 frames)
+        } else {
+             updateTrafficLight('green');
+             policeMode = false;
+             trafficTimer = 0;
+        }
+    }
+
+    // Nitro laddning (10 sek = 600 frames vid 60fps)
+    if (!nitroActive && nitroCharge < 100) {
+        nitroCharge += 0.16; 
+    }
+    document.getElementById('nitro-fill').style.width = nitroCharge + '%';
+
+    if (keys['Space'] && nitroCharge >= 100) {
+        nitroActive = true;
+        nitroCharge = 0;
+        nitroTimer = 240; // 4 sekunder
+    }
+    if (nitroActive) {
+        nitroTimer--;
+        if (nitroTimer <= 0) nitroActive = false;
+    }
+
+    // Olje-effekt (tappa kontroll)
+    if (oilEffect > 0) {
+        oilEffect--;
+        playerX += Math.sin(Date.now() / 50) * 5; // Sladdar
+    } else {
+        if (keys['ArrowLeft'] && playerX > 50) playerX -= 5;
+        if (keys['ArrowRight'] && playerX < 310) playerX += 5;
+    }
+
+    // Rita Spelare
+    ctx.fillStyle = gameState.currentCar.color;
+    ctx.fillRect(playerX, 500, 40, 70);
+    // Nitro-flamma
+    if (nitroActive) {
+        ctx.fillStyle = 'orange';
+        ctx.fillRect(playerX + 10, 570, 20, 20);
+    }
+
+    // Hantera Olja
+    spawnOil();
+    oilPatches.forEach((oil, index) => {
+        oil.y += currentMoveSpeed;
+        ctx.fillStyle = 'black';
+        ctx.beginPath();
+        ctx.ellipse(oil.x, oil.y, oil.w, oil.h, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        if (playerX < oil.x + oil.w && playerX + 40 > oil.x - oil.w && 500 < oil.y + oil.h && 570 > oil.y - oil.h) {
+            oilEffect = 60; // 1 sek
+            oilPatches.splice(index, 1);
+        }
+    });
+
+    // Hantera Fiender
+    spawnEnemy();
+    enemies.forEach((en, index) => {
+        en.y += currentMoveSpeed * 0.7;
+        ctx.fillStyle = en.color;
+        ctx.fillRect(en.x, en.y, en.w, en.h);
+
+        // Om polisen är aktiv, rita blåljus
+        if (en.isPolice && Date.now() % 200 < 100) {
+            ctx.fillStyle = 'red';
+            ctx.fillRect(en.x, en.y, 10, 10);
+        }
+
+        // Kollision
+        if (playerX < en.x + en.w && playerX + 40 > en.x && 500 < en.y + en.h && 570 > en.y) {
+            gameOver();
+        }
+
+        // Passera bil (Poäng/Pengar)
+        if (en.y > 600) {
+            enemies.splice(index, 1);
+            gameState.money += 10;
+            updateUI();
+        }
+    });
+
+    distance += currentMoveSpeed;
+    gameState.totalDist += currentMoveSpeed;
+    
+    // UI Uppdatering i spelet
+    document.getElementById('ui-speed').innerText = Math.floor(currentMoveSpeed * 20);
+    document.getElementById('ui-dist').innerText = Math.floor(distance / 10);
+
+    requestAnimationFrame(gameLoop);
 }
 
 function gameOver() {
-    state.gameActive = false;
-    state.totalDist += Math.floor(state.distance);
-    saveGame();
-    alert("GAME OVER! Du samlade: " + state.money + "kr");
-    location.reload(); // Enkelt sätt att nollställa banan
+    gameActive = false;
+    saveData();
+    alert("GAME OVER! Du tjänade pengar under racet.");
+    showMenu();
 }
 
-function saveGame() {
-    localStorage.setItem('money', state.money);
-    localStorage.setItem('totalDist', state.totalDist);
-    localStorage.setItem('ownedCars', JSON.stringify(state.ownedCars));
-}
-
-function hideMenus() {
-    document.querySelectorAll('.menu-overlay').forEach(m => m.classList.add('hidden'));
-}
-
-// --- TRAFIKLJUS LOGIK ---
-function startTraficLightCycle() {
-    const lights = {
-        red: document.getElementById('light-red'),
-        yellow: document.getElementById('light-yellow'),
-        green: document.getElementById('light-green')
-    };
-
-    setInterval(() => {
-        // Enkel cykel: Grön -> Gul -> Röd (Extra bilar)
-        setTimeout(() => lights.green.style.backgroundColor = '#2ecc71', 0);
-        setTimeout(() => { lights.green.style.backgroundColor = '#333'; lights.yellow.style.backgroundColor = '#f1c40f'; }, 20000);
-        setTimeout(() => { 
-            lights.yellow.style.backgroundColor = '#333'; 
-            lights.red.style.backgroundColor = '#e74c3c';
-            // Spawn extra bilar (polisen)
-            for(let i=0; i<3; i++) setTimeout(spawnEnemy, i*500);
-        }, 25000);
-        setTimeout(() => lights.red.style.backgroundColor = '#333', 35000);
-    }, 40000);
-}
-
-// Kör igång spawner
-spawnEnemy();
-spawnOil();
+// Starta
+showMenu();
 </script>
 </body>
 </html>
