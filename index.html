@@ -2,90 +2,74 @@
 <html lang="sv">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neon Overdrive Fixed</title>
+    <title>Neon Overdrive: Pro Racer</title>
     <style>
         :root {
-            --bg-color: #0a0a12;
+            --bg-color: #05050a;
             --road-color: #1a1a2e;
-            --line-color: rgba(255, 255, 255, 0.8);
+            --line-color: rgba(255, 255, 255, 0.6);
             --player-neon: #00f2fe;
-            --player-body: #4facfe;
-            --enemy-neon: #ff0055;
-            --oil-color: rgba(20, 20, 20, 0.9);
-            --text-color: #fff;
-            --accent-color: #f39c12;
-            --ui-bg: rgba(10, 10, 18, 0.98);
-            --track-border: #fff;
+            --track-border: #4facfe;
         }
-
         * { box-sizing: border-box; }
-        body { margin: 0; background: var(--bg-color); color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        body { margin: 0; background: var(--bg-color); color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; display: flex; justify-content: center; height: 100vh; }
 
-        /* --- UI & MENY FIX --- */
+        /* --- UI & MENY --- */
         #ui-layer {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--ui-bg); z-index: 1000; display: flex;
+            background: rgba(10, 10, 20, 0.95); z-index: 1000; display: flex;
             flex-direction: column; align-items: center; justify-content: center;
-            pointer-events: all; /* Säkerställer att klick går igenom */
         }
-
-        .menu-section { display: flex; flex-direction: column; align-items: center; width: 100%; z-index: 1001; }
+        .menu-section { display: flex; flex-direction: column; align-items: center; width: 100%; }
         .hidden { display: none !important; }
-
-        h1 { font-size: 50px; text-shadow: 0 0 20px var(--player-neon); margin-bottom: 30px; text-align: center; }
+        h1 { font-size: 50px; text-shadow: 0 0 20px var(--player-neon); margin: 10px; }
 
         .menu-btn {
             background: rgba(255,255,255,0.05); border: 2px solid var(--player-neon); color: var(--player-neon);
-            padding: 15px 40px; font-size: 18px; font-weight: bold; cursor: pointer;
-            margin: 10px; border-radius: 5px; width: 280px; transition: 0.3s;
-            position: relative; z-index: 1002;
+            padding: 12px 30px; font-size: 18px; font-weight: bold; cursor: pointer;
+            margin: 8px; border-radius: 5px; width: 260px; transition: 0.3s;
         }
         .menu-btn:hover { background: var(--player-neon); color: #000; box-shadow: 0 0 20px var(--player-neon); }
 
-        .list-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; max-width: 900px; margin-bottom: 20px; overflow-y: auto; }
-
+        .list-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; max-width: 800px; padding: 20px; }
         .card {
-            background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.2);
-            border-radius: 8px; padding: 15px; width: 180px; text-align: center; cursor: pointer;
-            transition: 0.2s;
+            background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 8px; padding: 15px; width: 160px; text-align: center; cursor: pointer;
         }
-        .card:hover { border-color: var(--player-neon); background: rgba(255,255,255,0.2); }
-        .card.selected { border-color: var(--accent-color); box-shadow: 0 0 15px var(--accent-color); }
-        .card.locked { opacity: 0.4; cursor: not-allowed; }
+        .card.selected { border-color: #f39c12; box-shadow: 0 0 15px #f39c12; }
+        .card.locked { opacity: 0.3; cursor: not-allowed; }
 
         /* --- SPELPLAN --- */
-        #game-screen { position: relative; width: 450px; height: 100vh; background: var(--road-color); border-left: 6px solid var(--track-border); border-right: 6px solid var(--track-border); overflow: hidden; z-index: 1; }
-        
+        #game-screen { position: relative; width: 440px; height: 100vh; background: var(--road-color); border-left: 5px solid var(--track-border); border-right: 5px solid var(--track-border); overflow: hidden; }
         .road-lines {
             position: absolute; width: 100%; height: 100%; top: 0;
             background-image: linear-gradient(to bottom, var(--line-color) 50%, transparent 50%);
-            background-size: 8px 100px; background-position: center 0;
-            animation: roadMove 1s linear infinite;
+            background-size: 6px 100px; background-position: center 0;
         }
-        @keyframes roadMove { from { background-position: center 0; } to { background-position: center 100px; } }
 
-        /* --- BILAR & OBJEKT --- */
-        .car { position: absolute; width: 50px; height: 90px; border-radius: 6px; z-index: 10; }
-        #player { bottom: 80px; left: 200px; background: var(--player-body); box-shadow: 0 0 20px var(--player-neon); transition: transform 0.2s; }
-        #player::before { content: ''; position: absolute; top: 15px; left: 7px; width: 36px; height: 15px; background: #000; border-radius: 3px; }
-
+        /* --- OBJEKT --- */
+        .car { position: absolute; width: 45px; height: 85px; border-radius: 5px; z-index: 10; }
+        #player { bottom: 80px; left: 197px; transition: transform 0.1s; }
         .enemy { background: #ff4b1f; box-shadow: 0 0 15px #ff0055; }
+        .police { background: linear-gradient(90deg, #fff 50%, #00f 50%); animation: siren 0.2s infinite; }
+        @keyframes siren { from { box-shadow: 0 0 20px red; } to { box-shadow: 0 0 20px blue; } }
         .oil { position: absolute; width: 60px; height: 40px; background: rgba(0,0,0,0.8); border-radius: 50%; z-index: 5; }
 
         /* --- HUD --- */
-        #hud { position: absolute; top: 20px; left: 20px; z-index: 500; background: rgba(0,0,0,0.7); padding: 10px; border-radius: 5px; border: 1px solid var(--player-neon); pointer-events: none; }
-        #nitro-bar { width: 100px; height: 10px; background: #333; margin-top: 5px; border-radius: 5px; overflow: hidden; }
-        #nitro-fill { width: 100%; height: 100%; background: var(--player-neon); transition: width 0.1s linear; }
+        #hud { position: absolute; top: 20px; left: 20px; z-index: 500; background: rgba(0,0,0,0.8); padding: 15px; border-radius: 8px; border: 1px solid var(--player-neon); pointer-events: none; min-width: 140px; }
+        #nitro-bar { width: 100%; height: 10px; background: #222; margin-top: 8px; border-radius: 5px; overflow: hidden; }
+        #nitro-fill { width: 100%; height: 100%; background: var(--player-neon); transition: width 0.2s; }
 
-        #traffic-light { position: absolute; top: 20px; right: 20px; width: 35px; height: 100px; background: #000; border-radius: 5px; display: flex; flex-direction: column; align-items: center; justify-content: space-around; padding: 5px; z-index: 500; pointer-events: none; }
+        #traffic-light { position: absolute; top: 20px; right: 20px; width: 35px; height: 100px; background: #000; border-radius: 5px; display: flex; flex-direction: column; align-items: center; justify-content: space-around; padding: 5px; z-index: 500; }
         .light { width: 22px; height: 22px; border-radius: 50%; background: #222; }
-        #light-red.active { background: #ff0000; box-shadow: 0 0 10px #ff0000; }
-        #light-yellow.active { background: #fffa00; box-shadow: 0 0 10px #fffa00; }
-        #light-green.active { background: #00ff00; box-shadow: 0 0 10px #00ff00; }
+        #light-red.active { background: #ff0000; box-shadow: 0 0 15px #ff0000; }
+        #light-yellow.active { background: #fffa00; box-shadow: 0 0 15px #fffa00; }
+        #light-green.active { background: #00ff00; box-shadow: 0 0 15px #00ff00; }
 
         .spin { animation: spin 0.8s linear; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
+        
+        #leaderboard-display { margin-top: 10px; font-size: 14px; color: #aaa; text-align: left; }
     </style>
 </head>
 <body>
@@ -96,6 +80,7 @@
             <button class="menu-btn" onclick="startGame()">STARTA RACE</button>
             <button class="menu-btn" onclick="showGarage()">GARAGE</button>
             <button class="menu-btn" onclick="showTracks()">BYT TRACK</button>
+            <div id="leaderboard-display"><b>TOPP 5 DISTANS:</b><br><span id="highscores">Laddar...</span></div>
         </div>
 
         <div id="garage-menu" class="menu-section hidden">
@@ -107,7 +92,7 @@
 
         <div id="track-menu" class="menu-section hidden">
             <h1>VÄLJ BANA</h1>
-            <p>Total Distans: <span id="track-total-dist">0</span> km</p>
+            <p>Total Grind: <span id="track-total-dist">0</span> km</p>
             <div id="track-list" class="list-container"></div>
             <button class="menu-btn" onclick="backToMain()">TILLBAKA</button>
         </div>
@@ -116,7 +101,7 @@
     <div id="hud">
         Dist: <span id="dist-val">0</span> km<br>
         Kr: <span id="money-val">0</span><br>
-        Nitro: <div id="nitro-bar"><div id="nitro-fill"></div></div>
+        Nitro (Space): <div id="nitro-bar"><div id="nitro-fill"></div></div>
     </div>
 
     <div id="traffic-light">
@@ -131,7 +116,7 @@
     </div>
 
 <script>
-// --- DATA ---
+// --- KONFIGURATION ---
 const carsData = [
     { id: 0, name: "Scout", price: 0, color: "#4facfe", neon: "#00f2fe" },
     { id: 1, name: "Fury", price: 500, color: "#ff4b1f", neon: "#ff0055" },
@@ -141,31 +126,33 @@ const carsData = [
 ];
 
 const tracksData = [
-    { id: 0, name: "City", road: "#1a1a2e", border: "#fff", req: 0 },
-    { id: 1, name: "Desert", road: "#3e2723", border: "#f39c12", req: 10 },
-    { id: 2, name: "Forest", road: "#0a2e0a", border: "#00ff00", req: 50 },
-    { id: 3, name: "Void", road: "#000000", border: "#e056fd", req: 100 },
-    { id: 4, name: "Magma", road: "#2e0a0a", border: "#ff0000", req: 250 }
+    { id: 0, name: "City Night", road: "#1a1a2e", border: "#4facfe", req: 0 },
+    { id: 1, name: "Toxic Sewers", road: "#0a2e0a", border: "#00ff00", req: 5 },
+    { id: 2, name: "Mars Highway", road: "#2e0a0a", border: "#ff4b1f", req: 20 },
+    { id: 3, name: "Cyber Void", road: "#000000", border: "#e056fd", req: 50 },
+    { id: 4, name: "Golden Gate", road: "#1a1a10", border: "#f1c40f", req: 100 }
 ];
 
-// --- STATE ---
 let gameState = {
     money: parseInt(localStorage.getItem('money')) || 0,
     totalDist: parseInt(localStorage.getItem('totalDist')) || 0,
     ownedCars: JSON.parse(localStorage.getItem('ownedCars')) || [0],
+    highscores: JSON.parse(localStorage.getItem('highscores')) || [],
     currentCar: parseInt(localStorage.getItem('currentCar')) || 0,
     currentTrack: parseInt(localStorage.getItem('currentTrack')) || 0,
     playing: false,
     dist: 0,
-    speed: 7,
-    playerX: 200,
+    speed: 3, // Börjar långsamt för grind
+    playerX: 197,
     nitroReady: true,
     light: 'green'
 };
 
 const player = document.getElementById('player');
 const screen = document.getElementById('game-screen');
+const roadLines = document.getElementById('road-lines');
 let keys = {};
+let linePos = 0;
 
 document.addEventListener('keydown', e => keys[e.code] = true);
 document.addEventListener('keyup', e => keys[e.code] = false);
@@ -173,51 +160,36 @@ document.addEventListener('keyup', e => keys[e.code] = false);
 // --- NAVIGATION ---
 function showGarage() {
     document.getElementById('main-menu').classList.add('hidden');
-    document.getElementById('track-menu').classList.add('hidden');
     document.getElementById('garage-menu').classList.remove('hidden');
     renderGarage();
 }
 
 function showTracks() {
     document.getElementById('main-menu').classList.add('hidden');
-    document.getElementById('garage-menu').classList.add('hidden');
     document.getElementById('track-menu').classList.remove('hidden');
     renderTracks();
 }
 
 function backToMain() {
-    document.getElementById('garage-menu').classList.add('hidden');
-    document.getElementById('track-menu').classList.add('hidden');
+    document.querySelectorAll('.menu-section').forEach(m => m.classList.add('hidden'));
     document.getElementById('main-menu').classList.remove('hidden');
+    updateLeaderboardDisplay();
 }
 
-// --- RENDERING ---
+// --- LOGIK & RENDERING ---
 function renderGarage() {
     const list = document.getElementById('car-list');
     document.getElementById('garage-money').innerText = gameState.money;
     list.innerHTML = '';
-    
     carsData.forEach(car => {
-        const isOwned = gameState.ownedCars.includes(car.id);
+        const owned = gameState.ownedCars.includes(car.id);
         const card = document.createElement('div');
         card.className = `card ${gameState.currentCar === car.id ? 'selected' : ''}`;
-        card.innerHTML = `
-            <div style="width:30px;height:50px;background:${car.color};margin:10px auto;box-shadow:0 0 10px ${car.neon}; border-radius:3px;"></div>
-            <b>${car.name}</b><br>
-            ${isOwned ? '<span style="color:#00f2fe">VALD</span>' : car.price + ' kr'}
-        `;
-        card.onclick = (e) => {
-            e.stopPropagation();
-            if(isOwned) {
-                gameState.currentCar = car.id;
-                save(); renderGarage(); applySettings();
-            } else if(gameState.money >= car.price) {
-                gameState.money -= car.price;
-                gameState.ownedCars.push(car.id);
-                save(); renderGarage();
-            } else {
-                alert("För lite pengar!");
-            }
+        card.innerHTML = `<div style="width:30px;height:50px;background:${car.color};margin:10px auto;box-shadow:0 0 10px ${car.neon}"></div>
+        <b>${car.name}</b><br>${owned ? 'ÄGD' : car.price + 'kr'}`;
+        card.onclick = () => {
+            if(owned) { gameState.currentCar = car.id; save(); renderGarage(); applySettings(); }
+            else if(gameState.money >= car.price) { gameState.money -= car.price; gameState.ownedCars.push(car.id); save(); renderGarage(); }
         };
         list.appendChild(card);
     });
@@ -227,34 +199,22 @@ function renderTracks() {
     const list = document.getElementById('track-list');
     document.getElementById('track-total-dist').innerText = gameState.totalDist;
     list.innerHTML = '';
-
     tracksData.forEach(track => {
-        const isLocked = gameState.totalDist < track.req;
+        const locked = gameState.totalDist < track.req;
         const card = document.createElement('div');
-        card.className = `card ${isLocked ? 'locked' : ''} ${gameState.currentTrack === track.id ? 'selected' : ''}`;
-        card.innerHTML = `
-            <b>${track.name}</b><br>
-            ${isLocked ? 'Kräver ' + track.req + 'km' : '<span style="color:#00f2fe">UPPLÅST</span>'}
-        `;
-        card.onclick = (e) => {
-            e.stopPropagation();
-            if(!isLocked) {
-                gameState.currentTrack = track.id;
-                save(); renderTracks(); applySettings();
-            }
-        };
+        card.className = `card ${locked ? 'locked' : ''} ${gameState.currentTrack === track.id ? 'selected' : ''}`;
+        card.innerHTML = `<b>${track.name}</b><br>${locked ? 'Kräver '+track.req+'km' : 'UPPLÅST'}`;
+        card.onclick = () => { if(!locked) { gameState.currentTrack = track.id; save(); renderTracks(); applySettings(); } };
         list.appendChild(card);
     });
 }
 
-// --- GAME LOGIC ---
 function startGame() {
     document.getElementById('ui-layer').classList.add('hidden');
     gameState.playing = true;
     gameState.dist = 0;
-    gameState.speed = 7;
-    gameState.playerX = 200;
-    
+    gameState.speed = 3; 
+    gameState.playerX = 197;
     document.querySelectorAll('.enemy, .oil').forEach(e => e.remove());
     applySettings();
     gameLoop();
@@ -264,19 +224,27 @@ function startGame() {
 function gameLoop() {
     if(!gameState.playing) return;
 
-    if(keys.ArrowLeft && gameState.playerX > 0) gameState.playerX -= 8;
-    if(keys.ArrowRight && gameState.playerX < 400) gameState.playerX += 8;
+    // Rörelse
+    if(keys.ArrowLeft && gameState.playerX > 0) gameState.playerX -= 7;
+    if(keys.ArrowRight && gameState.playerX < 395) gameState.playerX += 7;
     if(keys.Space && gameState.nitroReady) activateNitro();
 
     player.style.left = gameState.playerX + 'px';
-    gameState.dist += 0.1;
-    if(Math.floor(gameState.dist) % 50 === 0) gameState.speed += 0.05;
+    
+    // Distans och Speed-up var 50:e km
+    gameState.dist += 0.01;
+    if(Math.floor(gameState.dist * 10) % 50 === 0) gameState.speed += 0.005; 
 
-    document.getElementById('dist-val').innerText = Math.floor(gameState.dist);
+    // Väganimation
+    linePos += gameState.speed;
+    if(linePos > 100) linePos = 0;
+    roadLines.style.backgroundPosition = `center ${linePos}px`;
+
+    document.getElementById('dist-val').innerText = Math.floor(gameState.dist * 10);
     document.getElementById('money-val').innerText = gameState.money;
 
     if(Math.random() < 0.02) spawnEnemy();
-    if(Math.random() < 0.005) spawnOil();
+    if(Math.random() < 0.003) spawnOil();
 
     requestAnimationFrame(gameLoop);
 }
@@ -284,20 +252,15 @@ function gameLoop() {
 function spawnEnemy() {
     const enemy = document.createElement('div');
     enemy.className = 'car enemy';
-    if(gameState.light === 'red') { 
-        enemy.style.background = 'blue'; 
-        enemy.style.boxShadow = "0 0 15px blue, inset 0 0 10px white"; 
-    } else {
-        const colors = ['#e67e22', '#95a5a6', '#f1c40f', '#d35400', '#7f8c8d'];
-        enemy.style.background = colors[Math.floor(Math.random()*5)];
-    }
-    enemy.style.left = Math.random() * 400 + 'px';
+    if(gameState.light === 'red') enemy.className += ' police';
+    
+    enemy.style.left = Math.random() * 395 + 'px';
     enemy.style.top = '-100px';
     screen.appendChild(enemy);
 
     let move = setInterval(() => {
         if(!gameState.playing) { clearInterval(move); return; }
-        let top = parseInt(enemy.style.top) + gameState.speed;
+        let top = parseInt(enemy.style.top) + (gameState.light === 'red' ? gameState.speed + 2 : gameState.speed);
         enemy.style.top = top + 'px';
 
         if(checkColl(player, enemy)) gameOver();
@@ -319,10 +282,9 @@ function spawnOil() {
         if(!gameState.playing) { clearInterval(move); return; }
         let top = parseInt(oil.style.top) + gameState.speed;
         oil.style.top = top + 'px';
-
         if(checkColl(player, oil)) {
             player.classList.add('spin');
-            setTimeout(() => player.classList.remove('spin'), 1000);
+            setTimeout(() => player.classList.remove('spin'), 800);
         }
         if(top > window.innerHeight) { clearInterval(move); oil.remove(); }
     }, 10);
@@ -330,10 +292,11 @@ function spawnOil() {
 
 function activateNitro() {
     gameState.nitroReady = false;
-    gameState.speed *= 2;
+    let oldSpeed = gameState.speed;
+    gameState.speed *= 2.5;
     document.getElementById('nitro-fill').style.width = '0%';
     setTimeout(() => { 
-        gameState.speed /= 2;
+        gameState.speed = oldSpeed;
         setTimeout(() => {
             gameState.nitroReady = true;
             document.getElementById('nitro-fill').style.width = '100%';
@@ -361,14 +324,21 @@ function setLight(c) {
 function checkColl(a, b) {
     let r1 = a.getBoundingClientRect();
     let r2 = b.getBoundingClientRect();
-    return !(r1.top > r2.bottom || r1.bottom < r2.top || r1.right < r2.left || r1.left > r2.right);
+    return !(r1.top > r2.bottom-10 || r1.bottom < r2.top+10 || r1.right < r2.left+5 || r1.left > r2.right-5);
 }
 
 function gameOver() {
     gameState.playing = false;
-    gameState.totalDist += Math.floor(gameState.dist);
+    let score = Math.floor(gameState.dist * 10);
+    gameState.totalDist += score;
+    
+    // Spara highscore
+    gameState.highscores.push(score);
+    gameState.highscores.sort((a,b) => b-a);
+    gameState.highscores = gameState.highscores.slice(0, 5);
+    
     save();
-    alert("GAME OVER! Du fick " + Math.floor(gameState.dist) + " km.");
+    alert("CRASH! Distans: " + score + " km. Du tjänade pengar för grind!");
     location.reload();
 }
 
@@ -376,6 +346,7 @@ function save() {
     localStorage.setItem('money', gameState.money);
     localStorage.setItem('totalDist', gameState.totalDist);
     localStorage.setItem('ownedCars', JSON.stringify(gameState.ownedCars));
+    localStorage.setItem('highscores', JSON.stringify(gameState.highscores));
     localStorage.setItem('currentCar', gameState.currentCar);
     localStorage.setItem('currentTrack', gameState.currentTrack);
 }
@@ -389,7 +360,12 @@ function applySettings() {
     document.documentElement.style.setProperty('--track-border', track.border);
 }
 
-// Kör vid start
+function updateLeaderboardDisplay() {
+    const hs = gameState.highscores;
+    document.getElementById('highscores').innerHTML = hs.length > 0 ? hs.join('km, ') + 'km' : 'Inga race än';
+}
+
+updateLeaderboardDisplay();
 applySettings();
 </script>
 </body>
